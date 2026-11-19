@@ -1,0 +1,62 @@
+name: flour-shop-gateway
+services:
+  # 安全状态：限流/防刷计数、临时封禁，以及 user 认证模块的 Refresh Token 会话。
+  # 保留原服务名和卷名，复用已有防刷数据，避免生成第三个 Redis 实例。
+  redis-gateway:
+    image: redis:8.2.10-alpine
+    restart: unless-stopped
+    environment:
+      REDIS_PASSWORD: ${SHOP_GATEWAY_REDIS_PASSWORD:-shop_gateway_local_dev}
+    ports:
+      - "127.0.0.1:${SHOP_GATEWAY_REDIS_PORT:-6380}:6379"
+    # 显式使用 application.yml 连接参数，避免 Boot 为两个 Redis 自动推导单个连接。
+    labels:
+      org.springframework.boot.ignore: "true"
+    command:
+      - sh
+      - -c
+      - exec redis-server --requirepass "$${REDIS_PASSWORD}" --appendonly yes --maxmemory 128mb --maxmemory-policy noeviction
+    volumes:
+      - redis-gateway-data:/data
+    healthcheck:
+      test: >-
+        REDISCLI_AUTH="$${REDIS_PASSWORD}" redis-cli ping | grep -q PONG
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    logging:
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # 业务缓存：商品、分类、店铺信息等可从数据库重建的数据。
+  # 独立内存和淘汰策略，不能将登录会话、封禁或业务唯一凭据存入此实例。
+  redis-cache:
+    image: redis:8.2.10-alpine
+    restart: unless-stopped
+    environment:
+      REDIS_PASSWORD: ${SHOP_CACHE_REDIS_PASSWORD:-shop_cache_local_dev}
+    ports:
+      - "127.0.0.1:${SHOP_CACHE_REDIS_PORT:-6381}:6379"
+    labels:
+      org.springframework.boot.ignore: "true"
+    command:
+      - sh
+      - -c
+      - exec redis-server --requirepass "$${REDIS_PASSWORD}" --appendonly no --save "" --maxmemory 256mb --maxmemory-policy allkeys-lfu
+    volumes:
+      - redis-cache-data:/data
+    healthcheck:
+      test: >-
+        REDISCLI_AUTH="$${REDIS_PASSWORD}" redis-cli ping | grep -q PONG
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    logging:
+      options:
+        max-size: "10m"
+        max-file: "3"
+volumes:
+  # 安全实例保留既有 AOF 数据；缓存实例使用自己的数据目录。
+  redis-gateway-data:
+  redis-cache-data:

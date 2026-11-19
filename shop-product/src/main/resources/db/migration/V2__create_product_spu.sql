@@ -1,0 +1,26 @@
+-- SPU 保存所有规格共用的资料；价格与库存由后续 SKU/库存业务维护。
+CREATE TABLE product_spu (
+    id BIGINT NOT NULL AUTO_INCREMENT COMMENT '商品ID',
+    category_id BIGINT NOT NULL COMMENT '所属分类',
+    name VARCHAR(100) NOT NULL,
+    brand VARCHAR(50) NOT NULL,
+    gluten_type VARCHAR(10) NOT NULL,
+    usage_text VARCHAR(200) NOT NULL,
+    ingredients VARCHAR(500) NOT NULL,
+    storage VARCHAR(500) NOT NULL,
+    shelf_life_days INT NOT NULL,
+    image_url VARCHAR(2048) NOT NULL,
+    status VARCHAR(20) NOT NULL DEFAULT 'OFF_SHELF',
+    version BIGINT NOT NULL DEFAULT 1,
+    created_at DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+    updated_at DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3),
+    PRIMARY KEY (id),
+    KEY idx_product_category_status (category_id, status, id),
+    CONSTRAINT fk_product_category FOREIGN KEY (category_id) REFERENCES category(id),
+    CONSTRAINT ck_product_gluten CHECK (gluten_type IN ('HIGH','MEDIUM','LOW')),
+    CONSTRAINT ck_product_status CHECK (status IN ('OFF_SHELF','ON_SALE')),
+    CONSTRAINT ck_product_shelf_life CHECK (shelf_life_days BETWEEN 1 AND 1095),
+    CONSTRAINT ck_product_version CHECK (version >= 1),
+    CONSTRAINT ck_product_name CHECK (CHAR_LENGTH(TRIM(name)) > 0),
+    CONSTRAINT ck_product_brand CHECK (CHAR_LENGTH(TRIM(brand)) > 0)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='商品基础信息SPU';

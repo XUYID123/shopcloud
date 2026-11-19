@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.spring.shopuser.mapper.RoleMapper">
+    <!-- 注册事务读取有效默认角色；FOR SHARE 锁住该行，避免事务完成前角色被并发修改。 -->
+    <select id="findEnabledRoleIdForShare" resultType="java.lang.Long">
+        SELECT id FROM `role`
+        WHERE role_code = #{roleCode} AND status = 'ENABLED'
+        FOR SHARE
+    </select>
+
+    <!-- 写入用户与角色关联；和账号创建共用事务，受联合主键及外键约束。 -->
+    <insert id="insertUserRole">
+        INSERT INTO user_role (user_id, role_id) VALUES (#{userId}, #{roleId})
+    </insert>
+</mapper>

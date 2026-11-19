@@ -1,0 +1,25 @@
+<!-- 建议依赖片段：按 19 文档合并到需要追踪的服务 POM，版本由当前 Boot/Cloud BOM 管理。
+     本文件不是新模块，不会自动生效；不要额外引入 Sleuth 或与 Java Agent 重复插桩。 -->
+<dependencies>
+    <dependency>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-actuator</artifactId>
+    </dependency>
+    <dependency>
+        <groupId>io.micrometer</groupId>
+        <artifactId>micrometer-tracing-bridge-otel</artifactId>
+    </dependency>
+    <dependency>
+        <groupId>io.opentelemetry</groupId>
+        <artifactId>opentelemetry-exporter-otlp</artifactId>
+    </dependency>
+    <!-- 网关存在 OpenFeign 调用，需观察其客户端 Span。 -->
+    <dependency>
+        <groupId>io.github.openfeign</groupId>
+        <artifactId>feign-micrometer</artifactId>
+    </dependency>
+    <dependency>
+        <groupId>io.micrometer</groupId>
+        <artifactId>micrometer-registry-prometheus</artifactId>
+    </dependency>
+</dependencies>

@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- 每个应用显式选择自己的日志配置；共用 Pattern、滚动策略，服务名由本服务配置提供。 -->
+<configuration>
+    <include resource="org/spring/shopcommon/trace/logback-common.xml"/>
+</configuration>

@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.spring.shopuser.mapper.PermissionMapper">
+    <!-- namespace 绑定 PermissionMapper 接口；select 的 id 对应接口方法名。 -->
+    <!-- 状态查询只投影一列，启用判断在 Service 中完成；无行时 MyBatis 返回 null。 -->
+    <select id="findUserStatus" resultType="string">
+        SELECT status FROM user_account WHERE id = #{userId}
+    </select>
+    <!-- 依次经过用户角色表、角色权限表取得权限编码；DISTINCT 消除多个角色赋予同权限的重复。 -->
+    <!-- 三个 ENABLED 条件共同生效；禁用角色或权限不能继续给用户授权。 -->
+    <!-- #{userId} 使用参数绑定，不把客户端输入拼接到 SQL 中。 -->
+    <select id="findEffectivePermissions" resultType="string">
+        SELECT DISTINCT p.permission_code
+        FROM user_account u
+        JOIN user_role ur ON ur.user_id = u.id
+        JOIN `role` r ON r.id = ur.role_id
+        JOIN role_permission rp ON rp.role_id = r.id
+        JOIN permission p ON p.id = rp.permission_id
+        WHERE u.id = #{userId} AND u.status = 'ENABLED'
+          AND r.status = 'ENABLED' AND p.status = 'ENABLED'
+    </select>
+</mapper>

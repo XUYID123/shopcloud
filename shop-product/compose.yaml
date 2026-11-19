@@ -1,0 +1,32 @@
+name: flour-shop-product
+services:
+  mysql-product:
+    image: mysql:8.4.11
+    environment:
+      MYSQL_DATABASE: flour_product
+      MYSQL_USER: ${SHOP_PRODUCT_MYSQL_USER:-shop_product}
+      MYSQL_PASSWORD: ${SHOP_PRODUCT_MYSQL_PASSWORD:-shop_product_local_dev}
+      MYSQL_ROOT_PASSWORD: ${SHOP_PRODUCT_MYSQL_ROOT_PASSWORD:-shop_product_root_local_dev}
+      TZ: UTC
+    ports:
+      - "127.0.0.1:${SHOP_PRODUCT_MYSQL_PORT:-3308}:3306"
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_0900_ai_ci
+      - --default-time-zone=+00:00
+    volumes:
+      - mysql-product-data:/var/lib/mysql
+    healthcheck:
+      test: >-
+        MYSQL_PWD="$${MYSQL_PASSWORD}" mysql --protocol=TCP -h127.0.0.1
+        -u"$${MYSQL_USER}" "$${MYSQL_DATABASE}" --execute="SELECT 1" >/dev/null 2>&1
+      interval: 5s
+      timeout: 5s
+      retries: 30
+      start_period: 30s
+    logging:
+      options:
+        max-size: "10m"
+        max-file: "3"
+volumes:
+  mysql-product-data:

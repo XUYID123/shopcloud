@@ -1,0 +1,26 @@
+@gateway = http://localhost:8888
+
+### 空 JSON：前五次会到达 user 并返回 400；第六次触发防刷 429。
+### 继续连续超限达到三次，会临时封禁注册；按 Retry-After 等待。
+POST {{gateway}}/api/v1/users
+Content-Type: application/json
+
+{}
+
+### 自动发现入口共享同一注册额度，不能换路径绕过。
+POST {{gateway}}/shop-user/api/v1/users
+Content-Type: application/json
+
+{}
+
+### 主动测试伪造来源和请求编号：来源头不能增加配额，编号会被网关新 UUID 替换。
+POST {{gateway}}/api/v1/users
+Content-Type: application/json
+X-Forwarded-For: 198.51.100.20
+X-Request-Id: protection-example-003
+
+{}
+
+### 受保护业务接口需有效 JWT；网关自动生成关联编号，前端无需提供身份头。
+GET {{gateway}}/api/v1/user
+Authorization: Bearer <有效Token>

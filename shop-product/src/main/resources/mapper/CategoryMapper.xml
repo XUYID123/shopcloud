@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.spring.shopproduct.mapper.CategoryMapper">
+    <!-- 参数绑定防止 SQL 注入；自增 ID 回填至内部实体。 -->
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO category(name, sort, enabled) VALUES (#{name}, #{sort}, #{enabled})
+    </insert>
+    <!-- 与 (enabled, sort, id) 索引匹配；同排序值再按 ID 排序，保证返回顺序稳定。 -->
+    <select id="selectEnabled" resultType="org.spring.shopproduct.entity.CategoryEntity">
+        SELECT id, name, sort
+        FROM category
+        WHERE enabled = 1
+        ORDER BY sort ASC, id ASC
+    </select>
+    <!-- MySQL 8 共享行锁持有到商品事务结束，与分类变更的排他锁协调。 -->
+    <select id="selectForShare" resultType="org.spring.shopproduct.entity.CategoryEntity">
+        SELECT id, name, sort, enabled FROM category WHERE id = #{id} FOR SHARE
+    </select>
+</mapper>

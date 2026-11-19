@@ -1,0 +1,79 @@
+server:
+  port: 8081
+
+spring:
+  application:
+    name: shop-user
+  cloud:
+    nacos:
+      discovery:
+        server-addr: localhost:8848
+  http:
+    converters:
+      preferred-json-mapper: jackson2
+  jackson2:
+    deserialization:
+      fail-on-unknown-properties: true
+      fail-on-trailing-tokens: true
+  docker:
+    compose:
+      enabled: true
+      file: ${SHOP_USER_COMPOSE_FILE:compose.yaml}
+      lifecycle-management: start-only
+      readiness:
+        timeout: 5m
+  datasource:
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 1
+      connection-timeout: 10000
+  data:
+    redis:
+      host: ${SHOP_CACHE_REDIS_HOST:127.0.0.1}
+      port: ${SHOP_CACHE_REDIS_PORT:6381}
+      password: ${SHOP_CACHE_REDIS_PASSWORD:shop_cache_local_dev}
+      database: 0
+      connect-timeout: 1s
+      timeout: 1s
+  flyway:
+    enabled: true
+    baseline-on-migrate: false
+    validate-on-migrate: true
+    clean-disabled: true
+    fail-on-missing-locations: true
+    locations: classpath:db/migration
+    encoding: UTF-8
+
+
+# 仅 shop-user 使用 Plus 自动装配；原有 Mapper XML 完整复用。
+mybatis-plus:
+  mapper-locations: classpath:mapper/*.xml
+  configuration:
+    map-underscore-to-camel-case: true
+    default-statement-timeout: 3
+
+shop:
+  internal-auth:
+    public-key-location: ${SHOP_GATEWAY_INTERNAL_PUBLIC_KEY_LOCATION:file:../infra/local-secrets/gateway-internal-public.pem}
+    public-endpoints:
+      - methods: [POST]
+        paths: [/api/v1/users, /api/auth/login, /api/auth/refresh, /api/auth/logout]
+  auth:
+    enabled: ${SHOP_USER_AUTH_ENABLED:true}
+    private-key-location: ${SHOP_USER_JWT_PRIVATE_KEY_LOCATION:file:../infra/local-secrets/jwt-private.pem}
+    public-key-location: ${SHOP_GATEWAY_JWT_PUBLIC_KEY_LOCATION:file:../infra/local-secrets/jwt-public.pem}
+    issuer: ${SHOP_GATEWAY_JWT_ISSUER:flour-shop-user}
+    audience: ${SHOP_GATEWAY_JWT_AUDIENCE:flour-shop-api}
+    access-ttl: 30m
+    refresh-ttl: 7d
+    clock-skew: 30s
+    key-prefix: auth
+    redis:
+      # Refresh Token 属于安全状态，使用 6380 noeviction/AOF；权限缓存仍使用上方 6381。
+      host: ${SHOP_GATEWAY_REDIS_HOST:127.0.0.1}
+      port: ${SHOP_GATEWAY_REDIS_PORT:6380}
+      password: ${SHOP_GATEWAY_REDIS_PASSWORD:shop_gateway_local_dev}
+      database: 0
+      timeout: 1s
+  permissions:
+    key-prefix: shop:rbac:v1

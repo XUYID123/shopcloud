@@ -1,0 +1,77 @@
+name: Java quality
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  quick:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+          cache: maven
+      - name: Whitespace, static checks and fast tests
+        env:
+          BASE: ${{ github.event.pull_request.base.sha || github.event.before }}
+        run: |
+          args=()
+          if [ -n "$BASE" ] && git cat-file -e "$BASE^{commit}" 2>/dev/null; then
+            args=(--base "$BASE")
+          fi
+          python3 -X utf8 infra/quality/gate.py quick "${args[@]}"
+  integration:
+    needs: quick
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+          cache: maven
+      - name: Isolated MySQL and Redis, full Maven verify
+        run: python3 -X utf8 infra/quality/gate.py full
+  security:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+          cache: maven
+      - name: Install pinned scanners
+        working-directory: ${{ runner.temp }}
+        run: |
+          curl --fail --silent --show-error --location --retry 3 --output gitleaks.tar.gz \
+            https://github.com/gitleaks/gitleaks/releases/download/v8.30.1/gitleaks_8.30.1_linux_x64.tar.gz
+          curl --fail --silent --show-error --location --retry 3 --output osv-scanner \
+            https://github.com/google/osv-scanner/releases/download/v2.7.1/osv-scanner_linux_amd64
+          echo '551f6fc83ea457d62a0d98237cbad105af8d557003051f41f3e7ca7b3f2470eb  gitleaks.tar.gz' | sha256sum --check
+          echo 'fb7dab19a8bd9bbe5c3189f09d4b7ee1820c9553a23bac202648a56efd2f6ee8  osv-scanner' | sha256sum --check
+          tar xzf gitleaks.tar.gz gitleaks
+          chmod +x gitleaks osv-scanner
+      - name: Check for secrets in source and Git history
+        run: |
+          python3 -X utf8 infra/quality/gate.py secret-scan --gitleaks "$RUNNER_TEMP/gitleaks"
+          "$RUNNER_TEMP/gitleaks" git --redact=100 --config .gitleaks.toml .
+      - name: Scan Maven dependency advisories
+        run: python3 -X utf8 infra/quality/gate.py dependency-scan --osv "$RUNNER_TEMP/osv-scanner"

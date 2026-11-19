@@ -1,0 +1,129 @@
+server:
+  port: 8888
+  forward-headers-strategy: none
+
+spring:
+  reactor:
+    # 配合 TraceReactorConfiguration：Reactor Context 在每个响应式回调中安全映射到 MDC。
+    context-propagation: auto
+  application:
+    name: gateway-service
+  docker:
+    compose:
+      enabled: ${SHOP_GATEWAY_COMPOSE_ENABLED:true}
+      file: ${SHOP_GATEWAY_COMPOSE_FILE:compose.yaml}
+      lifecycle-management: start-only
+  data:
+    # 本服务使用 6380 做 IP 防刷；user 在同一安全实例的独立 auth 命名空间保存刷新凭据。
+    # JWT 本地验签不查 Redis，权限缓存仍使用物理隔离的 6381。
+    redis:
+      host: ${SHOP_GATEWAY_REDIS_HOST:127.0.0.1}
+      port: ${SHOP_GATEWAY_REDIS_PORT:6380}
+      password: ${SHOP_GATEWAY_REDIS_PASSWORD:shop_gateway_local_dev}
+      database: 0
+      connect-timeout: 1s
+      timeout: 1s
+  cloud:
+    nacos:
+      discovery:
+        server-addr: ${NACOS_SERVER_ADDR:localhost:8848}
+        group: DEFAULT_GROUP
+    gateway:
+      server:
+        webflux:
+          discovery:
+            locator:
+              enabled: true
+              include-expression: "serviceId matches 'shop-(user|product|cart|order|pay)'"
+          routes:
+            # RESTful paths are forwarded unchanged to the owning service.
+            - id: shop-user-api
+              uri: lb://shop-user
+              predicates:
+                - Path=/api/v1/users,/api/v1/users/**,/api/v1/auth/**,/api/auth/**,/api/v1/addresses,/api/v1/addresses/**,/api/v1/user/**
+            - id: shop-product-api
+              uri: lb://shop-product
+              predicates:
+                - Path=/api/v1/categories,/api/v1/categories/**,/api/v1/products,/api/v1/products/**,/api/v1/skus/**,/api/v1/admin/categories,/api/v1/admin/categories/**,/api/v1/admin/products,/api/v1/admin/products/**,/api/v1/admin/skus,/api/v1/admin/skus/**
+            - id: shop-cart-api
+              uri: lb://shop-cart
+              predicates:
+                - Path=/api/v1/cart,/api/v1/cart/**
+            - id: shop-order-api
+              uri: lb://shop-order
+              predicates:
+                - Path=/api/v1/orders,/api/v1/orders/**,/api/v1/checkout/**,/api/v1/admin/orders,/api/v1/admin/orders/**
+            - id: shop-pay-api
+              uri: lb://shop-pay
+              predicates:
+                - Path=/api/v1/payment-sessions,/api/v1/payment-sessions/**,/callbacks/payments/**
+            # Retain the existing /api/user/** test entry.
+            - id: user_service_route
+              uri: lb://shop-user
+              predicates:
+                - Path=/api/user/**
+#          filters:
+#            - StripPrefix=1
+    sentinel:
+      filter:
+        enabled: false
+      transport:
+        dashboard: localhost:8858 # Sentinel 控制台地址
+        port: 8719 # 客户端与控制台的通信端口，若默认8719被占用会自动顺延
+
+gateway:
+  internal-jwt:
+    private-key-location: ${SHOP_GATEWAY_INTERNAL_PRIVATE_KEY_LOCATION:file:../infra/local-secrets/gateway-internal-private.pem}
+    ttl: 45s
+  business-redis:
+    host: ${SHOP_CACHE_REDIS_HOST:127.0.0.1}
+    port: ${SHOP_CACHE_REDIS_PORT:6381}
+    password: ${SHOP_CACHE_REDIS_PASSWORD:shop_cache_local_dev}
+    timeout: 1s
+  auth:
+    enabled: ${SHOP_GATEWAY_AUTH_ENABLED:true}
+    # 仅供本地开发；生产必须配置为签发方管理的 RSA 公钥路径。
+    public-key-location: ${SHOP_GATEWAY_JWT_PUBLIC_KEY_LOCATION:file:../infra/local-secrets/jwt-public.pem}
+    issuer: ${SHOP_GATEWAY_JWT_ISSUER:flour-shop-user}
+    audience: ${SHOP_GATEWAY_JWT_AUDIENCE:flour-shop-api}
+    clock-skew: 30s
+    cache-ttl: 30s
+    redis-timeout: 1s
+    load-timeout: 4s
+    feign-threads: 16
+    user-service-url: ${SHOP_USER_INTERNAL_URL:}
+    key-prefix: shop:rbac:v1
+    whitelist:
+      - methods: [POST]
+        paths: [/api/v1/users, /api/v1/auth/sessions, /api/auth/login, /api/auth/refresh, /api/auth/logout]
+      - methods: [GET]
+        paths: [/api/v1/products, /api/v1/products/**, /api/v1/categories, /api/v1/categories/**]
+  protection:
+    sentinel-qps: 200
+    # Trust only actual connection IPs by default. Add only controlled proxy CIDRs.
+    trusted-proxies: []
+    anti-abuse:
+      enabled: true
+      requests-per-window: 120
+      window: 60s
+      violations-before-ban: 3
+      ban-duration: 5m
+      redis-timeout: 1s
+      key-prefix: gateway:abuse:v1
+      # 配置驱动的专项策略：普通额度始终先检查，再按 order 叠加全部命中的策略。
+      policies:
+        register:
+          order: 10
+          methods: [POST]
+          paths: [/api/v1/users]
+          limit: 5
+        login:
+          order: 20
+          methods: [POST]
+          paths: [/api/v1/auth/sessions, /api/auth/login]
+          limit: 10
+        refresh:
+          order: 30
+          methods: [POST]
+          paths: [/api/auth/refresh, /api/auth/logout]
+          limit: 30

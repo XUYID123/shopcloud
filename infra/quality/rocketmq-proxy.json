@@ -1,0 +1,7 @@
+{
+  "proxyMode": "cluster",
+  "namesrvAddr": "rocketmq-nameserver:9876",
+  "rocketMQClusterName": "DefaultCluster",
+  "grpcServerPort": 8081,
+  "useEndpointPortFromRequest": true
+}

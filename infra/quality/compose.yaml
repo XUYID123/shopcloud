@@ -1,0 +1,91 @@
+services:
+  mysql-user:
+    image: mysql:8.4.11
+    environment:
+      MYSQL_ROOT_PASSWORD: ${HARNESS_DB_PASSWORD:?test password required}
+      MYSQL_DATABASE: flour_user
+      MYSQL_USER: harness
+      MYSQL_PASSWORD: ${HARNESS_DB_PASSWORD:?test password required}
+    ports: ["127.0.0.1::3306"]
+    healthcheck:
+      test: ["CMD-SHELL", "mysql -h127.0.0.1 -u$$MYSQL_USER -p$$MYSQL_PASSWORD -e 'SELECT 1' >/dev/null"]
+      interval: 2s
+      timeout: 3s
+      retries: 60
+  mysql-product:
+    image: mysql:8.4.11
+    environment:
+      MYSQL_ROOT_PASSWORD: ${HARNESS_DB_PASSWORD:?test password required}
+      MYSQL_DATABASE: flour_product
+      MYSQL_USER: harness
+      MYSQL_PASSWORD: ${HARNESS_DB_PASSWORD:?test password required}
+    ports: ["127.0.0.1::3306"]
+    healthcheck:
+      test: ["CMD-SHELL", "mysql -h127.0.0.1 -u$$MYSQL_USER -p$$MYSQL_PASSWORD -e 'SELECT 1' >/dev/null"]
+      interval: 2s
+      timeout: 3s
+      retries: 60
+  redis-security:
+    image: redis:8.2.10-alpine
+    command: ["redis-server", "--requirepass", "${HARNESS_REDIS_PASSWORD:?test password required}", "--maxmemory-policy", "noeviction"]
+    ports: ["127.0.0.1::6379"]
+    healthcheck:
+      test: ["CMD-SHELL", "REDISCLI_AUTH=$$REDISCLI_AUTH redis-cli ping | grep -qx PONG"]
+      interval: 1s
+      timeout: 2s
+      retries: 15
+    environment:
+      REDISCLI_AUTH: ${HARNESS_REDIS_PASSWORD:?test password required}
+  redis-cache:
+    image: redis:8.2.10-alpine
+    command: ["redis-server", "--requirepass", "${HARNESS_REDIS_PASSWORD:?test password required}", "--maxmemory-policy", "allkeys-lfu"]
+    ports: ["127.0.0.1::6379"]
+    healthcheck:
+      test: ["CMD-SHELL", "REDISCLI_AUTH=$$REDISCLI_AUTH redis-cli ping | grep -qx PONG"]
+      interval: 1s
+      timeout: 2s
+      retries: 15
+    environment:
+      REDISCLI_AUTH: ${HARNESS_REDIS_PASSWORD:?test password required}
+  rocketmq-nameserver:
+    image: ${HARNESS_ROCKETMQ_IMAGE:-apache/rocketmq:5.5.0}
+    command: ["sh", "mqnamesrv"]
+    environment:
+      JAVA_OPT_EXT: "-Xms128m -Xmx256m -Xmn64m"
+    healthcheck:
+      test: ["CMD", "bash", "-c", "exec 3<>/dev/tcp/127.0.0.1/9876"]
+      interval: 2s
+      timeout: 2s
+      retries: 45
+  rocketmq-broker:
+    image: ${HARNESS_ROCKETMQ_IMAGE:-apache/rocketmq:5.5.0}
+    depends_on:
+      rocketmq-nameserver:
+        condition: service_healthy
+    command: ["sh", "mqbroker", "-c", "/tmp/shop-rocketmq.conf"]
+    environment:
+      NAMESRV_ADDR: rocketmq-nameserver:9876
+      JAVA_OPT_EXT: "-Xms256m -Xmx768m -Xmn128m -XX:MaxDirectMemorySize=512m -Dtls.server.mode=disabled -Dorg.apache.rocketmq.remoting.ssl.mode=disabled"
+    volumes:
+      - ./rocketmq-broker.conf:/tmp/shop-rocketmq.conf:ro
+    healthcheck:
+      test: ["CMD", "bash", "-c", "sh mqadmin clusterList -n rocketmq-nameserver:9876 | grep -q shop-test-broker"]
+      interval: 4s
+      timeout: 8s
+      retries: 35
+  rocketmq-proxy:
+    image: ${HARNESS_ROCKETMQ_IMAGE:-apache/rocketmq:5.5.0}
+    depends_on:
+      rocketmq-broker:
+        condition: service_healthy
+    command: ["sh", "mqproxy", "-pc", "/tmp/shop-rocketmq-proxy.json"]
+    environment:
+      JAVA_OPT_EXT: "-Xms128m -Xmx384m -Xmn64m -Dtls.server.mode=disabled -Dorg.apache.rocketmq.remoting.ssl.mode=disabled"
+    volumes:
+      - ./rocketmq-proxy.json:/tmp/shop-rocketmq-proxy.json:ro
+    ports: ["127.0.0.1::8081"]
+    healthcheck:
+      test: ["CMD", "bash", "-c", "exec 3<>/dev/tcp/127.0.0.1/8081"]
+      interval: 2s
+      timeout: 2s
+      retries: 35

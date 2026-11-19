@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- 只供各服务 logback-spring.xml 显式 include；common 自身不抢占应用的根日志配置。 -->
+<included>
+    <include resource="org/springframework/boot/logging/logback/defaults.xml"/>
+    <springProperty scope="context" name="TRACE_SERVICE" source="spring.application.name" defaultValue="shop-service"/>
+    <springProperty scope="context" name="TRACE_LOG_DIR" source="logging.file.path" defaultValue="logs"/>
+    <!-- 启动/定时任务等没有请求时显示 -；不要因此创建一份虚假的 HTTP 链路。 -->
+    <property name="TRACE_PATTERN" value="%d{yyyy-MM-dd HH:mm:ss.SSS} %-5level [${TRACE_SERVICE}] [%thread] [%X{traceId:--}] %logger{48} - %msg%n"/>
+    <appender name="TRACE_CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder><charset>UTF-8</charset><pattern>${TRACE_PATTERN}</pattern></encoder>
+    </appender>
+    <appender name="TRACE_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${TRACE_LOG_DIR}/${TRACE_SERVICE}.log</file>
+        <encoder><charset>UTF-8</charset><pattern>${TRACE_PATTERN}</pattern></encoder>
+        <!-- 日期与体积同时滚动，并限制总磁盘占用；路径可通过 logging.file.path 配置。 -->
+        <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+            <fileNamePattern>${TRACE_LOG_DIR}/${TRACE_SERVICE}.%d{yyyy-MM-dd}.%i.log.gz</fileNamePattern>
+            <maxFileSize>100MB</maxFileSize>
+            <maxHistory>14</maxHistory>
+            <totalSizeCap>2GB</totalSizeCap>
+        </rollingPolicy>
+    </appender>
+    <!-- 有界非等待入队，避免网关 Netty 线程直接执行文件/控制台 I/O；满队列可能丢日志，不作为可靠审计。 -->
+    <appender name="TRACE_ASYNC_CONSOLE" class="ch.qos.logback.classic.AsyncAppender">
+        <queueSize>8192</queueSize><discardingThreshold>0</discardingThreshold><neverBlock>true</neverBlock><maxFlushTime>3000</maxFlushTime>
+        <appender-ref ref="TRACE_CONSOLE"/>
+    </appender>
+    <appender name="TRACE_ASYNC_FILE" class="ch.qos.logback.classic.AsyncAppender">
+        <queueSize>8192</queueSize><discardingThreshold>0</discardingThreshold><neverBlock>true</neverBlock><maxFlushTime>3000</maxFlushTime>
+        <appender-ref ref="TRACE_FILE"/>
+    </appender>
+    <root level="INFO">
+        <appender-ref ref="TRACE_ASYNC_CONSOLE"/>
+        <appender-ref ref="TRACE_ASYNC_FILE"/>
+    </root>
+</included>

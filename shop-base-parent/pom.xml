@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <!-- 基础父 POM：只提供公共依赖、版本和插件，不默认引入数据库。 -->
+    <parent>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-parent</artifactId>
+        <version>4.0.9</version>
+        <relativePath/>
+    </parent>
+
+    <groupId>com.dong</groupId>
+    <artifactId>shop-base-parent</artifactId>
+    <version>1.0-SNAPSHOT</version>
+    <packaging>pom</packaging>
+
+    <properties>
+        <java.version>17</java.version>
+        <maven.compiler.source>17</maven.compiler.source>
+        <maven.compiler.target>17</maven.compiler.target>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+
+        <!-- 核心框架版本 (JDK 17 最佳搭配) -->
+        <spring-boot.version>4.0.9</spring-boot.version>
+        <spring-cloud.version>2025.1.4</spring-cloud.version>
+        <spring-cloud-alibaba.version>2025.1.0.0</spring-cloud-alibaba.version>
+
+        <!-- 自定义公共第三方依赖版本统一控制 -->
+        <mybatis-spring-boot.version>4.0.1</mybatis-spring-boot.version>
+        <!-- Keep HTTP client and core aligned with Apache HttpClient 5.6.3's own BOM. -->
+        <httpclient5.version>5.6.3</httpclient5.version>
+        <httpcore5.version>5.4.3</httpcore5.version>
+        <shop-common.version>1.0-SNAPSHOT</shop-common.version>
+    </properties>
+
+    <!-- 默认继承：所有子模块自动获得这些依赖，无需重复声明。 -->
+    <dependencies>
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <!-- 子模块可用于编译，但不向使用该模块的其他项目传递。 -->
+            <optional>true</optional>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+    <!-- 按需引入：这里只管理版本，子模块在 dependencies 中声明后才引入。
+         Boot 依赖版本来自上方的 starter-parent；Web、数据库、Nacos、Sentinel
+         不放入默认 dependencies，避免 common 注册服务或网关触发数据库自动配置。 -->
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>com.dong</groupId>
+                <artifactId>shop-common</artifactId>
+                <version>${shop-common.version}</version>
+            </dependency>
+            <!-- Spring Cloud 官方依赖约束，不会自动引入所有 Cloud 组件。 -->
+            <dependency>
+                <groupId>org.springframework.cloud</groupId>
+                <artifactId>spring-cloud-dependencies</artifactId>
+                <version>${spring-cloud.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+
+            <!-- 统一管理 Nacos、Sentinel 等组件版本，由各服务按需声明依赖。 -->
+            <dependency>
+                <groupId>com.alibaba.cloud</groupId>
+                <artifactId>spring-cloud-alibaba-dependencies</artifactId>
+                <version>${spring-cloud-alibaba.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+
+            <!-- 编译期公共库版本锁定 -->
+            <dependency>
+                <groupId>org.projectlombok</groupId>
+                <artifactId>lombok</artifactId>
+                <version>${lombok.version}</version>
+            </dependency>
+
+        </dependencies>
+    </dependencyManagement>
+
+    <build>
+        <pluginManagement>
+            <plugins>
+                <!-- 子服务声明此插件即可生成可执行 Boot JAR；common 不声明。 -->
+                <plugin>
+                    <groupId>org.springframework.boot</groupId>
+                    <artifactId>spring-boot-maven-plugin</artifactId>
+                    <version>${spring-boot.version}</version>
+                    <configuration>
+                        <excludes>
+                            <exclude>
+                                <groupId>org.projectlombok</groupId>
+                                <artifactId>lombok</artifactId>
+                            </exclude>
+                        </excludes>
+                    </configuration>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-surefire-plugin</artifactId>
+                    <version>${maven-surefire-plugin.version}</version>
+                </plugin>
+            </plugins>
+        </pluginManagement>
+    </build>
+
+</project>

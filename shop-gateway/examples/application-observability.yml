@@ -1,0 +1,29 @@
+# 建议配置：需要先按 19 文档添加 Actuator/OTel/Feign Micrometer 依赖并部署 Collector。
+# 本文件未自动启用，不表示当前已完成分布式追踪后端接入或验收。
+spring:
+  reactor:
+    context-propagation: auto
+  cloud:
+    openfeign:
+      micrometer:
+        enabled: true
+management:
+  server:
+    # Actuator 不经过匹配业务路由后的 GlobalFilter；管理端口单独部署并限制访问。
+    port: ${MANAGEMENT_SERVER_PORT:9091}
+    address: 127.0.0.1
+  tracing:
+    sampling:
+      probability: 0.1
+    propagation:
+      type: w3c
+  otlp:
+    tracing:
+      endpoint: ${OTEL_EXPORTER_OTLP_TRACES_ENDPOINT:http://localhost:4318/v1/traces}
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus
+logging:
+  pattern:
+    level: '%5p [traceId=%X{traceId:-},spanId=%X{spanId:-}]'

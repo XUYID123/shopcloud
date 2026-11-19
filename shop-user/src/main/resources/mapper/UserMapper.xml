@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.spring.shopuser.mapper.UserMapper">
+    <!-- 只用于内部数据库映射；即使映射 password_hash，也不能把整个 UserEntity 当作响应返回。 -->
+    <resultMap id="user" type="org.spring.shopuser.entity.UserEntity">
+        <id property="id" column="id"/>
+        <result property="username" column="username"/>
+        <result property="passwordHash" column="password_hash"/>
+        <result property="nickname" column="nickname"/>
+        <result property="status" column="status"/>
+        <result property="tokenVersion" column="token_version"/>
+        <result property="createdAt" column="created_at"/>
+        <result property="updatedAt" column="updated_at"/>
+    </resultMap>
+
+    <!-- 复用字段列表，按用户名/ID 查询共享同一套实体列映射。 -->
+    <sql id="columns">
+        id, username, password_hash, nickname, status, token_version, created_at, updated_at
+    </sql>
+
+    <!-- 参数绑定而非字符串拼接；用户名大小写比较和最终唯一性由表的排序规则/唯一索引决定。 -->
+    <select id="findByUsername" resultMap="user">
+        SELECT <include refid="columns"/> FROM user_account WHERE username = #{username}
+    </select>
+
+    <!-- 单账号主键查询；未找到时 Mapper 返回 null，调用方决定业务语义。 -->
+    <select id="findById" resultMap="user">
+        SELECT <include refid="columns"/> FROM user_account WHERE id = #{id}
+    </select>
+
+    <!-- 注册只允许写入服务端确定的初始字段；生成主键写回传入实体的 id 属性。 -->
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id" keyColumn="id">
+        INSERT INTO user_account (username, password_hash, status, token_version)
+        VALUES (#{username}, #{passwordHash}, #{status}, #{tokenVersion})
+    </insert>
+</mapper>

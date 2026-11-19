@@ -1,0 +1,4 @@
+org.spring.shopcommon.trace.TraceAutoConfiguration
+org.spring.shopcommon.logging.BizLogAutoConfiguration
+org.spring.shopcommon.idempotent.IdempotentAutoConfiguration
+org.spring.shopcommon.internalauth.InternalAuthAutoConfiguration

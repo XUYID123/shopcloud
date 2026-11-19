@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.spring.shopproduct.mapper.ProductMapper">
+    <!-- 总数和分页共用过滤条件。LOCATE 按数据库排序规则作字面匹配，% 和 _ 不会变成通配符。 -->
+    <sql id="publicListFilter">
+        FROM product_spu p JOIN category c ON c.id=p.category_id
+        WHERE p.status='ON_SALE' AND c.enabled=1
+        AND EXISTS (SELECT 1 FROM product_sku s WHERE s.product_id=p.id AND s.enabled=1)
+        <if test="query.categoryId != null">
+            AND p.category_id=#{query.categoryId}
+        </if>
+        <if test="query.keyword != null">
+            AND (LOCATE(#{query.keyword},p.name) &gt; 0 OR LOCATE(#{query.keyword},p.brand) &gt; 0)
+        </if>
+    </sql>
+    <select id="countPublicProducts" resultType="long">
+        SELECT COUNT(*) <include refid="publicListFilter"/>
+    </select>
+    <select id="selectPublicProducts" resultType="org.spring.shopproduct.vo.ProductSummaryVO">
+        SELECT CAST(p.id AS CHAR) AS productId, p.name, p.image_url AS imageUrl,
+               (SELECT MIN(s.price_fen) FROM product_sku s WHERE s.product_id=p.id AND s.enabled=1) AS minPriceFen,
+               p.status
+        <include refid="publicListFilter"/>
+        <!-- 排序分支由服务端控制，相同价格以唯一商品 ID 降序打破平局。 -->
+        <choose>
+            <when test="query.sort.name() == 'PRICE_ASC'">ORDER BY minPriceFen ASC, p.id DESC</when>
+            <when test="query.sort.name() == 'PRICE_DESC'">ORDER BY minPriceFen DESC, p.id DESC</when>
+            <otherwise>ORDER BY p.id DESC</otherwise>
+        </choose>
+        LIMIT #{query.size} OFFSET #{offset}
+    </select>
+    <!-- 在 SQL 内统一判断可见性，避免向匿名用户泄漏未上架商品。 -->
+    <select id="selectVisibleById" resultType="org.spring.shopproduct.entity.ProductEntity">
+        SELECT p.id,p.category_id,p.name,p.brand,p.gluten_type,p.usage_text,p.ingredients,
+               p.storage,p.shelf_life_days,p.image_url,p.status,p.version
+        FROM product_spu p JOIN category c ON c.id=p.category_id
+        WHERE p.id=#{id} AND p.status='ON_SALE' AND c.enabled=1
+    </select>
+    <!-- 锁住 SPU，避免新增规格（先取同一 SPU 共享锁）与销售状态更新交叉。 -->
+    <select id="selectForUpdate" resultType="org.spring.shopproduct.entity.ProductEntity">
+        SELECT id,category_id,name,brand,gluten_type,usage_text,ingredients,storage,
+               shelf_life_days,image_url,status,version FROM product_spu WHERE id=#{id} FOR UPDATE
+    </select>
+    <!-- 版本比较与版本递增在同一条 SQL 中完成，不依赖 Java 中比较后无条件写入。 -->
+    <update id="updateSaleStatus">
+        UPDATE product_spu SET status=#{status},version=version+1
+        WHERE id=#{id} AND version=#{expectedVersion}
+    </update>
+    <!-- 所有输入均参数绑定；状态和版本由后端固定，不能让客户端直接创建已上架商品。 -->
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO product_spu(category_id,name,brand,gluten_type,usage_text,ingredients,
+                                storage,shelf_life_days,image_url,status,version)
+        VALUES (#{categoryId},#{name},#{brand},#{glutenType},#{usageText},#{ingredients},
+                #{storage},#{shelfLifeDays},#{imageUrl},'OFF_SHELF',1)
+    </insert>
+</mapper>

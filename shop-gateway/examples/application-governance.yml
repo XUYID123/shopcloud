@@ -1,0 +1,23 @@
+# 示例接入文件，合并进网关自己的 application.yml；不会自动加载或修改现有生产来源白名单。
+# Gateway 5 的 WebFlux 配置位于 spring.cloud.gateway.server.webflux。
+spring:
+  cloud:
+    gateway:
+      server:
+        webflux:
+          httpclient:
+            connect-timeout: 1000 # 毫秒；这是网关转发连接，不是内部权限 Feign 的超时。
+            response-timeout: 3s
+          globalcors:
+            # OPTIONS 可能不满足路由 Method 谓词，仍由简单 URL HandlerMapping 处理预检。
+            add-to-simple-url-handler-mapping: true
+            cors-configurations:
+              '[/**]':
+                allowed-origins:
+                  - ${SHOP_FRONTEND_ORIGIN:http://localhost:5173}
+                allowed-methods: [GET, POST, PUT, PATCH, DELETE, OPTIONS]
+                allowed-headers: [Authorization, Content-Type, Accept, Idempotency-Key, X-Business-Tag, X-Trace-Id, traceparent, tracestate]
+                exposed-headers: [X-Trace-Id, X-Request-Id, Retry-After, Location]
+                # 当前采用显式 Bearer，不依赖跨域 Cookie。未来启用 Cookie 时须配精确来源及 CSRF 策略。
+                allow-credentials: false
+                max-age: 600

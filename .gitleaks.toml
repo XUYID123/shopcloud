@@ -1,0 +1,15 @@
+[extend]
+useDefault = true
+
+# Repository-owned public test fixture. The local gate also checks its digest.
+[[allowlists]]
+description = "Repository test-only RSA private key"
+paths = ['''(^|/)infra/security/test-fixtures/internal-test-private\.pem$''']
+
+# These two published UUIDs identify HTTP example requests. They do not grant access.
+[[allowlists]]
+description = "Two literal idempotency IDs in HTTP examples"
+condition = "AND"
+regexTarget = "line"
+paths = ['''(^|/)docs/03-接口文档\.md$''']
+regexes = ['''^Idempotency-Key: (20e5f6a0-01b8-4e71-8f26-1a33bba6b065|0b44b6a5-67d1-456c-8b34-a2d148ce5e62)\s*$''']

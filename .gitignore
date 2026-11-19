@@ -1,0 +1,9 @@
+# Maven output, local runtime logs and Python bytecode
+target/
+logs/
+__pycache__/
+.env
+.env.*
+!.env.example
+/infra/local-secrets/*
+!/infra/local-secrets/.gitignore

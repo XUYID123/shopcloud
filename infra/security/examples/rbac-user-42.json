@@ -1,0 +1,6 @@
+{
+  "userId": "42",
+  "version": "dev-u1",
+  "enabled": true,
+  "permissions": ["order:create"]
+}

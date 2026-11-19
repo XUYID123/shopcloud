@@ -1,0 +1,94 @@
+# 将本文件相应段落合并到业务服务自己的 application.yml；依赖 JAR 不偷偷加载默认 application.yml。
+# 同步组件供 MVC/后台任务使用，网关继续使用原来的响应式缓存与鉴权。
+shop:
+  cache:
+    enabled: true
+    namespace: shop:user:profile:v1
+    ttl: 5m
+    jitter: 60s
+    null-ttl: 15s
+    lock-wait: 1s
+    lock-lease: 10s
+    max-value-bytes: 262144
+    redis:
+      host: ${SHOP_CACHE_REDIS_HOST:127.0.0.1}
+      port: ${SHOP_CACHE_REDIS_PORT:6381}
+      username: ${SHOP_CACHE_REDIS_USERNAME:}
+      password: ${SHOP_CACHE_REDIS_PASSWORD:shop_cache_local_dev}
+      database: 0
+      timeout: 1s
+      ssl: false
+    redis-pool:
+      threads: 8
+      queue-capacity: 64
+    database-pool:
+      threads: 8
+      queue-capacity: 32
+
+resilience4j:
+  retry:
+    configs:
+      safeCache:
+        max-attempts: 2 # 包含首次调用；只重试明确的短暂故障。
+        wait-duration: 25ms
+        enable-exponential-backoff: true
+        exponential-backoff-multiplier: 2
+        retry-exceptions:
+          - org.springframework.data.redis.RedisConnectionFailureException
+          - org.springframework.dao.TransientDataAccessException
+          - java.sql.SQLTransientException
+        ignore-exceptions:
+          - java.util.concurrent.TimeoutException
+          - org.springframework.dao.QueryTimeoutException
+          - java.sql.SQLTimeoutException
+          - io.github.resilience4j.circuitbreaker.CallNotPermittedException
+          - java.util.concurrent.RejectedExecutionException
+          - java.lang.InterruptedException
+          - java.lang.IllegalArgumentException
+    instances:
+      safeCacheRedisRead:
+        base-config: safeCache
+      safeCacheRedisWrite:
+        base-config: safeCache
+      safeCacheDatabase:
+        base-config: safeCache
+  timelimiter:
+    configs:
+      safeCacheRedis:
+        timeout-duration: 250ms # 每次尝试的上限，包含线程池排队；不是整个 get 的总超时。
+        cancel-running-future: true
+    instances:
+      safeCacheRedisRead:
+        base-config: safeCacheRedis
+      safeCacheRedisWrite:
+        base-config: safeCacheRedis
+      safeCacheDatabase:
+        timeout-duration: 1500ms
+        cancel-running-future: true
+  circuitbreaker:
+    configs:
+      safeCache:
+        sliding-window-type: COUNT_BASED
+        sliding-window-size: 20
+        minimum-number-of-calls: 10
+        failure-rate-threshold: 50
+        wait-duration-in-open-state: 10s
+        permitted-number-of-calls-in-half-open-state: 2
+        # 业务校验和线程隔离拒绝不计为 Redis/数据库故障；超时和依赖异常计入失败率。
+        ignore-exceptions:
+          - java.lang.IllegalArgumentException
+          - java.lang.InterruptedException
+          - java.util.concurrent.RejectedExecutionException
+    instances:
+      safeCacheRedisRead:
+        base-config: safeCache
+      safeCacheRedisWrite:
+        base-config: safeCache
+      safeCacheDatabase:
+        base-config: safeCache
+
+# 查询在独立线程执行，应在被调用的 Spring 查询 Bean 上建立 readOnly 事务，并设置 JDBC/MyBatis 超时。
+# 已有 mybatis 段落时合并，不要覆盖 mapper-locations。
+mybatis:
+  configuration:
+    default-statement-timeout: 1 # 秒；配合 JDBC socketTimeout/连接池 connectionTimeout，不让慢查询无限占连接。

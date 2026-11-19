@@ -1,0 +1,31 @@
+@baseUrl = http://localhost:8081
+@username = flour_demo_01
+
+### 注册：第一次 201；再次使用同一用户名会返回 409。
+POST {{baseUrl}}/api/v1/users
+Content-Type: application/json
+X-Request-Id: register-demo-001
+
+{
+  "username": "{{username}}",
+  "password": "FlourDemo123!"
+}
+
+### 非法参数：密码不满足长度，预期 400 VALIDATION_ERROR。
+POST {{baseUrl}}/api/v1/users
+Content-Type: application/json
+
+{
+  "username": "{{username}}",
+  "password": "short"
+}
+
+### 角色注入：不接受 roles 等额外字段，预期 400，且不创建用户。
+POST {{baseUrl}}/api/v1/users
+Content-Type: application/json
+
+{
+  "username": "flour_demo_admin",
+  "password": "FlourDemo123!",
+  "roles": ["ADMIN"]
+}

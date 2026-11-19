@@ -1,0 +1,19 @@
+{
+  "version": "dev-r1",
+  "rules": [
+    {
+      "id": "create-order",
+      "endpoint": {"methods": ["POST"], "paths": ["/api/v1/orders"]},
+      "routeIds": [],
+      "permissions": ["order:create"],
+      "match": "ALL"
+    },
+    {
+      "id": "admin-product-write",
+      "endpoint": {"methods": ["POST", "PUT", "PATCH", "DELETE"], "paths": ["/api/v1/admin/products", "/api/v1/admin/products/**"]},
+      "routeIds": [],
+      "permissions": ["product:write"],
+      "match": "ALL"
+    }
+  ]
+}
