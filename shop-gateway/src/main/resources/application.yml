@@ -45,6 +45,11 @@ spring:
               uri: lb://shop-product
               predicates:
                 - Path=/api/v1/categories,/api/v1/categories/**,/api/v1/products,/api/v1/products/**,/api/v1/skus/**,/api/v1/admin/categories,/api/v1/admin/categories/**,/api/v1/admin/products,/api/v1/admin/products/**,/api/v1/admin/skus,/api/v1/admin/skus/**
+            - id: shop-inventory-api
+              uri: lb://shop-inventory
+              predicates:
+                - Path=/api/v1/admin/inventory/batches
+                - Method=POST
             - id: shop-cart-api
               uri: lb://shop-cart
               predicates:
@@ -97,7 +102,7 @@ gateway:
       - methods: [POST]
         paths: [/api/v1/users, /api/v1/auth/sessions, /api/auth/login, /api/auth/refresh, /api/auth/logout]
       - methods: [GET]
-        paths: [/api/v1/products, /api/v1/products/**, /api/v1/categories, /api/v1/categories/**]
+        paths: [/api/v1/products, /api/v1/products/**, /api/v1/categories, /api/v1/categories/**, '/api/v1/skus/{skuId}']
   protection:
     sentinel-qps: 200
     # Trust only actual connection IPs by default. Add only controlled proxy CIDRs.

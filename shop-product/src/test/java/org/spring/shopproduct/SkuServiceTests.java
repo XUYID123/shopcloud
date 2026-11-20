@@ -13,6 +13,22 @@ import static org.mockito.Mockito.*;
 
 /** 验证依赖故障与程序错误的边界，避免自动重试写入或泄漏连接信息。 */
 class SkuServiceTests {
+    @Test void detailMapsDependencyFailuresAndRetainsSqlBugs() {
+        var skus = mock(SkuMapper.class);
+        var service = new SkuService(mock(ProductMapper.class), skus, mock(ProductCacheInvalidationOutbox.class));
+        var unavailable = new DataAccessResourceFailureException("secret connection");
+        when(skus.selectVisibleById(1)).thenThrow(unavailable);
+        assertThatThrownBy(() -> service.detail("1")).isInstanceOfSatisfying(BusinessException.class, error -> {
+            assertThat(error.getCode()).isEqualTo(503);
+            assertThat(error.getBusinessCode()).isEqualTo("DEPENDENCY_UNAVAILABLE");
+            assertThat(error.getCause()).isSameAs(unavailable);
+            assertThat(error.getMessage()).doesNotContain("secret");
+        });
+        var bug = new BadSqlGrammarException("sql", "sql", new java.sql.SQLException());
+        doThrow(bug).when(skus).selectVisibleById(1);
+        assertThatThrownBy(() -> service.detail("1")).isSameAs(bug);
+    }
+
     @Test void dependencyFailureIs503ButSqlBugIsNotHiddenAndInsertIsNotRetried() {
         var products=mock(ProductMapper.class);var skus=mock(SkuMapper.class);
         when(products.selectIdForShare(1)).thenReturn(1L);

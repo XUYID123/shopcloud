@@ -35,7 +35,7 @@ public class InternalTokenSigner {
     /** 每次生成独立 jti；method/path/query 绑定实际下游请求，aud 仅来自受控路由。 */
     public String sign(String userId, String kind, String digest, String audience, String method, String path, String query) {
         // 受众只能是受控服务名；摘要来自实际通过的 RBAC 快照，不能取客户端传来的权限头。
-        if (digest == null || !digest.matches("[a-f0-9]{64}") || !audience.matches("shop-(user|product|cart|order|pay)")) throw new IllegalArgumentException("Invalid internal authorization snapshot");
+        if (digest == null || !digest.matches("[a-f0-9]{64}") || !audience.matches("shop-(user|product|inventory|cart|order|pay)")) throw new IllegalArgumentException("Invalid internal authorization snapshot");
         Instant now = Instant.now(); String subject = userId == null ? "anonymous" : userId;
         // typ/issuer 隔离内部与外部 JWT；UUID jti 每次更新，但没有消费记录时它不提供一次性防重放。
         // 附加最终方法、原始路径、查询摘要，防止凭据被挪用到同一服务的其他接口。

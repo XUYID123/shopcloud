@@ -1,11 +1,17 @@
 package org.spring.shopproduct.mapper;
 
 import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Param;
 import org.spring.shopproduct.entity.SkuEntity;
 
 /** SKU 持久化端口，复用商品服务的数据源和本地事务。 */
 @Mapper
 public interface SkuMapper {
+    /** 根据 SKU 主键读取所属商品标注的保质期，供上架前备货使用。 */
+    Integer selectShelfLifeDays(@Param("skuId") long skuId);
+    /** 只读取可公开展示的单个 SKU。 */
+    SkuEntity selectVisibleById(@Param("skuId") long skuId);
+
     /** 商城详情仅展示启用规格，按主键稳定排序；使用普通快照读。 */
     java.util.List<SkuEntity> selectEnabledByProduct(@org.apache.ibatis.annotations.Param("productId") long productId);
 

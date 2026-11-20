@@ -1,0 +1,25 @@
+name: flour-shop-inventory
+services:
+  mysql-inventory:
+    image: mysql:8.4.11
+    environment:
+      MYSQL_DATABASE: flour_inventory
+      MYSQL_USER: ${SHOP_INVENTORY_MYSQL_USER:-shop_inventory}
+      MYSQL_PASSWORD: ${SHOP_INVENTORY_MYSQL_PASSWORD:-shop_inventory_local_dev}
+      MYSQL_ROOT_PASSWORD: ${SHOP_INVENTORY_MYSQL_ROOT_PASSWORD:-shop_inventory_root_local_dev}
+      TZ: UTC
+    ports:
+      - "127.0.0.1:${SHOP_INVENTORY_MYSQL_PORT:-3309}:3306"
+    command: ["--default-time-zone=+00:00", "--character-set-server=utf8mb4"]
+    volumes:
+      - mysql-inventory-data:/var/lib/mysql
+    healthcheck:
+      test: >-
+        MYSQL_PWD="$${MYSQL_PASSWORD}" mysql --protocol=TCP -h127.0.0.1
+        -u"$${MYSQL_USER}" "$${MYSQL_DATABASE}" --execute="SELECT 1" >/dev/null 2>&1
+      interval: 5s
+      timeout: 5s
+      retries: 30
+      start_period: 30s
+volumes:
+  mysql-inventory-data:

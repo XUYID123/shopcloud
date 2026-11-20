@@ -3,6 +3,7 @@ package org.spring.shopcommon.internalauth;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
@@ -34,8 +35,10 @@ public class InternalAuthAutoConfiguration {
         return new InternalJwtVerifier(key, name, Clock.systemUTC());
     }
     @Bean FilterRegistrationBean<InternalAuthenticationFilter> internalAuthenticationFilterRegistration(InternalJwtVerifier verifier,
-            ObjectMapper mapper, InternalAuthProperties properties, Environment environment) {
-        var registration = new FilterRegistrationBean<>(new InternalAuthenticationFilter(verifier, mapper, properties, environment.getRequiredProperty("spring.application.name")));
+            ObjectMapper mapper, InternalAuthProperties properties, Environment environment,
+            ObjectProvider<InternalServiceEndpoint> serviceEndpoints) {
+        var registration = new FilterRegistrationBean<>(new InternalAuthenticationFilter(verifier, mapper, properties,
+                environment.getRequiredProperty("spring.application.name"), serviceEndpoints.orderedStream().toList()));
         registration.setOrder(Ordered.HIGHEST_PRECEDENCE + 10); // 在 Trace Filter 之后，所有拒绝都有追踪 ID。
         registration.setAsyncSupported(true);
         // 普通请求、异步、错误和 Servlet 内部分派均纳入认证边界，避免只保护 Controller 的盲区。

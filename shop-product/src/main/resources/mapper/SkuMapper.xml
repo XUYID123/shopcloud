@@ -1,6 +1,18 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="org.spring.shopproduct.mapper.SkuMapper">
+    <select id="selectShelfLifeDays" resultType="java.lang.Integer">
+        SELECT p.shelf_life_days
+        FROM product_sku s JOIN product_spu p ON p.id = s.product_id
+        WHERE s.id = #{skuId}
+    </select>
+    <select id="selectVisibleById" resultType="org.spring.shopproduct.entity.SkuEntity">
+        SELECT s.id, s.product_id, s.sku_code, s.spec_name, s.weight_gram, s.price_fen, s.enabled, s.version
+        FROM product_sku s
+        JOIN product_spu p ON p.id = s.product_id
+        JOIN category c ON c.id = p.category_id
+        WHERE s.id = #{skuId} AND s.enabled = 1 AND p.status = 'ON_SALE' AND c.enabled = 1
+    </select>
     <!-- 利用 product_id/enabled 索引过滤，不复用管理端持锁且包含禁用规格的查询。 -->
     <select id="selectEnabledByProduct" resultType="org.spring.shopproduct.entity.SkuEntity">
         SELECT id,product_id,sku_code,spec_name,weight_gram,price_fen,enabled,version

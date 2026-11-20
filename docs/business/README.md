@@ -4,4 +4,5 @@
 - 分类读取 GET /api/v1/categories；后台创建 POST /api/v1/admin/categories，数据库保证分类名唯一。见[分类读](../25-商品分类列表查询.md)、[分类写](../23-商品分类创建接口.md)。
 - 后台 POST /api/v1/admin/products 新建未上架 SPU、POST /api/v1/admin/skus 新建 SKU、PUT /api/v1/admin/products/{productId}/sale-status 版本化上下架。见[SPU](../26-新增商品SPU接口.md)、[SKU](../27-新增商品SKU接口.md)、[销售态](../28-商品上架与下架接口.md)。
 - 公开 GET /api/v1/products 分页和 GET /api/v1/products/{productId} 详情，详情使用 Redis 缓存和 MySQL 回源。见[Controller](../../shop-product/src/main/java/org/spring/shopproduct/controller/PublicProductController.java)和[缓存](../32-商品详情Redis缓存与失效.md)。
+- 公开 GET /api/v1/skus/{skuId} 从商品库读取可见规格及当前价格，返回的 estimatedAvailable 为 null。见[接口交付记录](../agent-engineering/tasks/public-sku-detail.md)。
 - cart/order/pay 的交易业务为骨架，库存扣减、支付、订单异步、通用商品编辑与角色管理待实现。shop-order 可按配置初始化消息 Producer，交易事件需随实际用例接入。以当前源码核实 [OpenAPI](../openapi.json) 中的规划契约。

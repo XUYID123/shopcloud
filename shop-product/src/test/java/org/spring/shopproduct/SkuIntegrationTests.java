@@ -108,6 +108,80 @@ class SkuIntegrationTests {
         } finally {pool.shutdownNow();}
     }
 
+    @Test void publicDetailReturnsContractAndCurrentPrice() throws Exception {
+        String skuPath = createSkuForPublicRead();
+        var result = getPublicSku(skuPath);
+        check(result, 200, "OK");
+        var data = json.readTree(result.getBody()).path("data");
+        assertThat(data.size()).isEqualTo(9);
+        assertThat(data.path("skuId").asText()).isEqualTo(skuPath.substring(skuPath.lastIndexOf('/') + 1));
+        assertThat(data.path("skuId").isTextual()).isTrue();
+        assertThat(data.path("productId").asText()).isEqualTo(Long.toString(productId));
+        assertThat(data.path("skuCode").asText()).isEqualTo(marker);
+        assertThat(data.path("specName").asText()).isEqualTo("5kg袋装");
+        assertThat(data.path("weightGram").asLong()).isEqualTo(5000);
+        assertThat(data.path("priceFen").asLong()).isEqualTo(2990);
+        assertThat(data.path("version").asLong()).isEqualTo(1);
+        assertThat(data.path("enabled").asBoolean()).isTrue();
+        assertThat(data.path("estimatedAvailable").isNull()).isTrue();
+
+        jdbc.update("UPDATE product_sku SET price_fen=3200, version=version+1 WHERE product_id=?", productId);
+        var latest = json.readTree(getPublicSku(skuPath).getBody()).path("data");
+        assertThat(latest.path("priceFen").asLong()).isEqualTo(3200);
+        assertThat(latest.path("version").asLong()).isEqualTo(2);
+    }
+
+    @Test void publicDetailHidesMissingDisabledOffShelfAndDisabledCategory() throws Exception {
+        String skuPath = createSkuForPublicRead();
+        assertSkuHidden("/api/v1/skus/" + Long.MAX_VALUE);
+        jdbc.update("UPDATE product_sku SET enabled=0 WHERE product_id=?", productId);
+        assertSkuHidden(skuPath);
+        jdbc.update("UPDATE product_sku SET enabled=1 WHERE product_id=?", productId);
+        jdbc.update("UPDATE product_spu SET status='OFF_SHELF' WHERE id=?", productId);
+        assertSkuHidden(skuPath);
+        jdbc.update("UPDATE product_spu SET status='ON_SALE' WHERE id=?", productId);
+        jdbc.update("UPDATE category SET enabled=0 WHERE id=?", categoryId);
+        assertSkuHidden(skuPath);
+    }
+
+    @Test void publicDetailValidatesIdAndRequiresGatewayCredential() throws Exception {
+        for (String id : List.of("0", "-1", "01", "abc", "9223372036854775808")) {
+            check(getPublicSku("/api/v1/skus/" + id), 400, "VALIDATION_ERROR");
+        }
+        String skuPath = createSkuForPublicRead();
+        check(http.getForEntity(skuPath, String.class), 401, "INVALID_INTERNAL_TOKEN");
+        var wrongAudience = publicSkuHeaders(skuPath, "shop-user", "GET");
+        check(http.exchange(skuPath, HttpMethod.GET, new HttpEntity<>(wrongAudience), String.class),
+                401, "INVALID_INTERNAL_TOKEN");
+        var wrongMethod = publicSkuHeaders(skuPath, "shop-product", "POST");
+        check(http.exchange(skuPath, HttpMethod.POST, new HttpEntity<>(wrongMethod), String.class),
+                403, "FORBIDDEN");
+    }
+
+    private String createSkuForPublicRead() throws Exception {
+        var response = post(input(), headers());
+        check(response, 201, "OK");
+        jdbc.update("UPDATE product_spu SET status='ON_SALE' WHERE id=?", productId);
+        return "/api/v1/skus/" + json.readTree(response.getBody()).path("data").path("skuId").asText();
+    }
+
+    private ResponseEntity<String> getPublicSku(String skuPath) {
+        return http.exchange(skuPath, HttpMethod.GET, new HttpEntity<>(publicSkuHeaders(skuPath, "shop-product", "GET")), String.class);
+    }
+
+    private HttpHeaders publicSkuHeaders(String skuPath, String audience, String method) {
+        var headers = new HttpHeaders();
+        headers.set("X-Trace-Id", "public-sku-test");
+        headers.set("X-Internal-Token", InternalTestTokens.token(audience, null, "anonymous", method, skuPath));
+        return headers;
+    }
+
+    private void assertSkuHidden(String skuPath) throws Exception {
+        var result = getPublicSku(skuPath);
+        check(result, 404, "SKU_NOT_FOUND");
+        assertThat(json.readTree(result.getBody()).hasNonNull("data")).isFalse();
+    }
+
     /** 构建合法的六字段输入；每个测试拥有唯一编码。 */
     private Map<String,Object> input(){var m=new HashMap<String,Object>();m.put("productId",Long.toString(productId));
         m.put("skuCode",marker);m.put("specName","5kg袋装");m.put("weightGram",5000);m.put("priceFen",2990);m.put("enabled",true);return m;}

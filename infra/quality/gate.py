@@ -180,7 +180,7 @@ def full(args, env):
             env=docker_env)
         run(*admin, "updateSubGroup", *nameserver, "-g", "shop-harness-inbox", "-r", "3", env=docker_env)
         ports = {}
-        for service, private in (("mysql-user", 3306), ("mysql-product", 3306),
+        for service, private in (("mysql-user", 3306), ("mysql-product", 3306), ("mysql-inventory", 3306),
                                  ("redis-security", 6379), ("redis-cache", 6379), ("rocketmq-proxy", 8081)):
             binding = run(*compose, "port", service, str(private), env=docker_env, capture=True).strip()
             host, separator, port = binding.rpartition(":")
@@ -196,6 +196,8 @@ def full(args, env):
             HARNESS_DB_PASSWORD=docker_env["HARNESS_DB_PASSWORD"],
             SHOP_PRODUCT_MYSQL_HOST="127.0.0.1", SHOP_PRODUCT_MYSQL_PORT=ports["mysql-product"],
             SHOP_PRODUCT_MYSQL_USER="harness", SHOP_PRODUCT_MYSQL_PASSWORD=docker_env["HARNESS_DB_PASSWORD"],
+            SHOP_INVENTORY_MYSQL_HOST="127.0.0.1", SHOP_INVENTORY_MYSQL_PORT=ports["mysql-inventory"],
+            SHOP_INVENTORY_MYSQL_USER="harness", SHOP_INVENTORY_MYSQL_PASSWORD=docker_env["HARNESS_DB_PASSWORD"],
         )
         for prefix, port in (("SHOP_GATEWAY_REDIS", ports["redis-security"]),
                              ("SHOP_CACHE_REDIS", ports["redis-cache"])):

@@ -24,7 +24,7 @@
         <shop.mybatis.starter-version>${mybatis-spring-boot.version}</shop.mybatis.starter-version>
     </properties>
 
-    <!-- 默认继承：user/product/cart/order/pay 自动引入，不需重复声明。
+    <!-- 默认继承：user/product/inventory/cart/order/pay 自动引入，不需重复声明。
          Lombok 与测试依赖也会从基础父 POM 一并继承。
          gateway/common 直接继承基础父 POM，隔离本层数据库依赖。 -->
     <dependencies>
@@ -71,6 +71,7 @@
         <module>shop-user</module>
         <module>shop-gateway</module>
         <module>shop-product</module>
+        <module>shop-inventory</module>
         <module>shop-cart</module>
         <module>shop-order</module>
         <module>shop-pay</module>

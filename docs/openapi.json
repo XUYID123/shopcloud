@@ -700,7 +700,7 @@
           "商品"
         ],
         "summary": "可售规格详情与估算库存",
-        "description": "估算库存允许滞后或为 null；实际成交由库存预占决定。",
+        "description": "匿名查询单个启用 SKU。父商品须已上架且分类须启用。不存在或不可见统一返回 SKU_NOT_FOUND，estimatedAvailable 暂为 null。",
         "security": [],
         "parameters": [
           {
@@ -712,10 +712,10 @@
             "required": true,
             "schema": {
               "type": "string",
-              "description": "JSON ID 使用字符串",
+              "description": "正整数 ID 字符串，最大为有符号 64 位整数上限",
               "minLength": 1,
-              "maxLength": 64,
-              "pattern": "^[A-Za-z0-9][A-Za-z0-9_-]{0,63}$",
+              "maxLength": 19,
+              "pattern": "^[1-9][0-9]{0,18}$",
               "example": "2001"
             }
           },
@@ -2309,7 +2309,7 @@
           "库存管理"
         ],
         "summary": "生产批次入库",
-        "description": "生产批次入库",
+        "description": "已实现。需要 inventory:write（默认授予 ADMIN）。支持未上架 SKU 备货；同一操作者用同一幂等键重放原请求返回 200 和首次入库快照。",
         "security": [
           {
             "bearerAuth": []
@@ -2327,6 +2327,16 @@
           }
         ],
         "responses": {
+          "200": {
+            "description": "幂等重放，返回首次创建的批次快照",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseStockBatch"
+                }
+              }
+            }
+          },
           "201": {
             "description": "创建成功",
             "headers": {
@@ -4710,7 +4720,11 @@
               "CATEGORY_NOT_FOUND",
               "CATEGORY_DISABLED",
               "PRODUCT_NOT_FOUND",
+              "SKU_NOT_FOUND",
               "SKU_CODE_EXISTS",
+              "STOCK_BATCH_EXISTS",
+              "IDEMPOTENCY_CONFLICT",
+              "INVALID_BATCH_DATES",
               "PRODUCT_NOT_READY"
             ]
           },
@@ -6312,10 +6326,10 @@
         "properties": {
           "skuId": {
             "type": "string",
-            "description": "JSON ID 使用字符串",
+            "description": "SKU ID 为正整数的十进制字符串，不接受前导零，最大 Long.MAX_VALUE",
             "minLength": 1,
-            "maxLength": 64,
-            "pattern": "^[A-Za-z0-9][A-Za-z0-9_-]{0,63}$",
+            "maxLength": 19,
+            "pattern": "^[1-9][0-9]{0,18}$",
             "example": "2001"
           },
           "warehouseId": {
@@ -6327,7 +6341,8 @@
           "batchNo": {
             "type": "string",
             "maxLength": 64,
-            "minLength": 1
+            "minLength": 1,
+            "description": "去除首尾空白，禁止控制字符。同一 SKU 和仓库内唯一，区分大小写。"
           },
           "manufacturedOn": {
             "type": "string",
@@ -6356,7 +6371,7 @@
           "quantity"
         ],
         "additionalProperties": false,
-        "description": "生产日期不晚于今天；到期日大于今天及生产日，且不超商品标注保质期。"
+        "description": "按 Asia/Shanghai 判断业务日。生产日期不晚于今天；到期日大于今天及生产日，且不超商品标注保质期。违反日期规则返回 422 INVALID_BATCH_DATES。"
       },
       "StockBatch": {
         "type": "object",

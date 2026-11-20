@@ -19,9 +19,15 @@ public final class InternalAuthenticationFilter extends GenericFilterBean {
     private final InternalJwtVerifier verifier;
     private final ObjectMapper json;
     private final List<PublicEndpoint> endpoints;
+    private final List<InternalServiceEndpoint> serviceEndpoints;
     private final String audience;
     public InternalAuthenticationFilter(InternalJwtVerifier verifier, ObjectMapper json, InternalAuthProperties properties, String audience) {
+        this(verifier, json, properties, audience, List.of());
+    }
+    InternalAuthenticationFilter(InternalJwtVerifier verifier, ObjectMapper json, InternalAuthProperties properties,
+                                 String audience, List<InternalServiceEndpoint> serviceEndpoints) {
         this.verifier = verifier; this.json = json; this.audience = audience;
+        this.serviceEndpoints = List.copyOf(serviceEndpoints);
         // 公开路径只在启动时编译；默认空列表，未配置的路径不接受匿名凭据。
         endpoints = properties.publicEndpoints().stream().map(e -> new PublicEndpoint(e.methods(),
                 e.paths().stream().map(PathPatternParser.defaultInstance::parse).toList())).toList();
@@ -47,7 +53,10 @@ public final class InternalAuthenticationFilter extends GenericFilterBean {
             if (headers.size() != 1) throw new IllegalArgumentException();
             String query = request.getDispatcherType() == DispatcherType.INCLUDE
                     ? (String) request.getAttribute(RequestDispatcher.INCLUDE_QUERY_STRING) : request.getQueryString();
-            identity = verifier.verify(headers.get(0), request.getMethod(), path, query);
+            var serviceEndpoint = serviceEndpoints.stream().filter(endpoint -> endpoint.matches(request.getMethod(), path)).findFirst();
+            identity = serviceEndpoint.isPresent()
+                    ? serviceEndpoint.get().verifier().verify(headers.get(0), request.getMethod(), path, query)
+                    : verifier.verify(headers.get(0), request.getMethod(), path, query);
         } catch (IllegalArgumentException invalid) {
             reject(request,response, 401, "INVALID_INTERNAL_TOKEN", "内部身份凭据无效或已过期"); return;
         }
@@ -57,7 +66,7 @@ public final class InternalAuthenticationFilter extends GenericFilterBean {
                 && "GET".equals(request.getMethod())
                 && path.equals("/internal/v1/users/" + identity.userId() + "/permissions");
         if (path.startsWith("/internal/")
-                ? !(permissionEndpoint && "permission-query".equals(identity.kind()))
+                ? !("service".equals(identity.kind()) || (permissionEndpoint && "permission-query".equals(identity.kind())))
                 : "permission-query".equals(identity.kind()) || (identity.anonymous() && endpoints.stream().noneMatch(e -> e.matches(request.getMethod(), path)))) {
             reject(request,response, 403, "FORBIDDEN", "内部凭据无权访问此资源"); return;
         }

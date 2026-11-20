@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+    <include resource="org/spring/shopcommon/trace/logback-common.xml"/>
+</configuration>
