@@ -1,0 +1,15 @@
+name: flour-shop-pay
+services:
+  mysql-pay:
+    image: mysql:8.4.11
+    environment:
+      MYSQL_DATABASE: flour_pay
+      MYSQL_USER: ${SHOP_PAY_MYSQL_USER:-shop_pay}
+      MYSQL_PASSWORD: ${SHOP_PAY_MYSQL_PASSWORD:-shop_pay_local_dev}
+      MYSQL_ROOT_PASSWORD: ${SHOP_PAY_MYSQL_ROOT_PASSWORD:-shop_pay_root_local_dev}
+    ports:
+      - "127.0.0.1:${SHOP_PAY_MYSQL_PORT:-3311}:3306"
+    volumes:
+      - mysql-pay-data:/var/lib/mysql
+volumes:
+  mysql-pay-data:

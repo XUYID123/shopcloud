@@ -1,0 +1,97 @@
+{
+  "workflow_version": "2.0.0",
+  "stage": 4,
+  "result": "PASS",
+  "recorded_at": "2026-11-20T09:12:49+00:00",
+  "checks": [
+    {
+      "id": "artifacts",
+      "status": "PASS",
+      "summary": "Nonempty repository artifacts hashed",
+      "source": "TOOL",
+      "required": true,
+      "files": [
+        "docs/agent-engineering/skills.md",
+        "docs/agent-engineering/stage-04-skills.md",
+        ".agents/skills/code-review/SKILL.md",
+        ".agents/skills/concurrency-design/SKILL.md",
+        ".agents/skills/database-design/SKILL.md",
+        ".agents/skills/feature-development/SKILL.md",
+        ".agents/skills/redis-design/SKILL.md",
+        ".agents/skills/rocketmq-design/SKILL.md",
+        ".agents/skills/security-review/SKILL.md"
+      ]
+    },
+    {
+      "id": "local-links",
+      "status": "PASS",
+      "summary": "Checked local references in 9 Markdown artifacts",
+      "source": "TOOL",
+      "required": true,
+      "files": [
+        "docs/agent-engineering/skills.md",
+        "docs/agent-engineering/stage-04-skills.md",
+        ".agents/skills/code-review/SKILL.md",
+        ".agents/skills/concurrency-design/SKILL.md",
+        ".agents/skills/database-design/SKILL.md",
+        ".agents/skills/feature-development/SKILL.md",
+        ".agents/skills/redis-design/SKILL.md",
+        ".agents/skills/rocketmq-design/SKILL.md",
+        ".agents/skills/security-review/SKILL.md"
+      ]
+    },
+    {
+      "id": "skill-discovery",
+      "status": "PASS",
+      "summary": "App Server evidence covers seven current enabled repository skills",
+      "source": "TOOL",
+      "required": true,
+      "files": [
+        "docs/agent-engineering/evidence/skill-discovery.json"
+      ],
+      "inputs": [
+        "docs/agent-engineering/evidence/skill-discovery.json",
+        ".agents/skills/code-review/SKILL.md",
+        ".agents/skills/concurrency-design/SKILL.md",
+        ".agents/skills/database-design/SKILL.md",
+        ".agents/skills/feature-development/SKILL.md",
+        ".agents/skills/redis-design/SKILL.md",
+        ".agents/skills/rocketmq-design/SKILL.md",
+        ".agents/skills/security-review/SKILL.md"
+      ]
+    },
+    {
+      "id": "agent-review",
+      "status": "PASS",
+      "summary": "七项 metadata 与发现通过，自动触发的未验证范围明确",
+      "source": "AGENT",
+      "required": true,
+      "files": [
+        "docs/agent-engineering/stage-04-skills.md"
+      ]
+    }
+  ],
+  "snapshots": {
+    "@stage-contract": "c34a704bcfce2dd6300cdd1d344a5fa83f8065b7ce979121114ffb814418fa02",
+    ".agents/skills/code-review/SKILL.md": "b2f7d62fb0e9c19c3884e5475e4b6dbb1d7f5a83ddf7336d5e39e901ebb4be19",
+    ".agents/skills/concurrency-design/SKILL.md": "759af39316c347d47131f5ed3a3a5efec30ff0991b84415a8beeb11d73eb572e",
+    ".agents/skills/database-design/SKILL.md": "3298c07e818fb23a5c00b08a26dc6c71897f0283475d46ce2f79a2ea2fc45269",
+    ".agents/skills/feature-development/SKILL.md": "70d51f7ffa328c8b95261236548748e0ebb76ef70f1d3b69f4214e89613345eb",
+    ".agents/skills/redis-design/SKILL.md": "c69ede1f99384d387a3e2089d4136fa114113f8cc35cd26bbd24d95601e9d506",
+    ".agents/skills/rocketmq-design/SKILL.md": "ecd8f0a7b6ccf0df95d0b1ff89f7aa897f3a5cfb172f3d39d3d19fd4aae45708",
+    ".agents/skills/security-review/SKILL.md": "51b16971c7d0b5a2516dc5f2e07b6383063506ee5d9c271f03afe31d1878e784",
+    "docs/agent-engineering/evidence/skill-discovery.json": "3618887c3fe492bb41336b7140a8e3d3d818b14881ec3955b99235b220a22a72",
+    "docs/agent-engineering/skills.md": "9b385e15e43d04d50daee15453cdc27d52c69740d8dd9511b31d30262ecbd38d",
+    "docs/agent-engineering/stage-04-skills.md": "90f3e88007374f98c888d6385c0c13fd10ec23bce2a84b1932f3232811e3e99c"
+  },
+  "extra_inputs": [
+    ".agents/skills/code-review/SKILL.md",
+    ".agents/skills/concurrency-design/SKILL.md",
+    ".agents/skills/database-design/SKILL.md",
+    ".agents/skills/feature-development/SKILL.md",
+    ".agents/skills/redis-design/SKILL.md",
+    ".agents/skills/rocketmq-design/SKILL.md",
+    ".agents/skills/security-review/SKILL.md",
+    "docs/agent-engineering/evidence/skill-discovery.json"
+  ]
+}

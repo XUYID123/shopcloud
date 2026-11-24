@@ -1,0 +1,100 @@
+{
+  "workflow_version": "2.0.0",
+  "stage": 8,
+  "result": "PASS",
+  "recorded_at": "2026-11-20T09:08:56+00:00",
+  "checks": [
+    {
+      "id": "artifacts",
+      "status": "PASS",
+      "summary": "Nonempty repository artifacts hashed",
+      "source": "TOOL",
+      "required": true,
+      "files": [
+        "docs/agent-engineering/maintenance.md",
+        "docs/agent-engineering/construction-workflow.md",
+        "docs/agent-engineering/stage-08-maintenance.md",
+        "infra/quality/workflow.py",
+        "infra/quality/workflow_checks.py",
+        "infra/quality/test_workflow.py",
+        "infra/quality/router_policy.py",
+        "infra/quality/test_router.py"
+      ]
+    },
+    {
+      "id": "local-links",
+      "status": "PASS",
+      "summary": "Checked local references in 3 Markdown artifacts",
+      "source": "TOOL",
+      "required": true,
+      "files": [
+        "docs/agent-engineering/maintenance.md",
+        "docs/agent-engineering/construction-workflow.md",
+        "docs/agent-engineering/stage-08-maintenance.md"
+      ]
+    },
+    {
+      "id": "recovery-tests",
+      "status": "PASS",
+      "summary": "Executed local verifier",
+      "source": "TOOL",
+      "required": true,
+      "command": [
+        "python",
+        "-X",
+        "utf8",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "infra/quality",
+        "-v"
+      ],
+      "exit_code": 0,
+      "log": "target/harness-workflow/recovery-tests-a6d0bba49e844aea9f7641a973f1e0b7.log",
+      "files": [
+        "infra/quality/workflow.py",
+        "infra/quality/test_workflow.py",
+        "infra/quality/router_policy.py",
+        "infra/quality/test_router.py",
+        "docs/agent-engineering/evidence/router-cases.json"
+      ],
+      "inputs": [
+        "infra/quality/workflow.py",
+        "infra/quality/test_workflow.py",
+        "infra/quality/router_policy.py",
+        "infra/quality/test_router.py",
+        "docs/agent-engineering/evidence/router-cases.json"
+      ]
+    },
+    {
+      "id": "agent-review",
+      "status": "PASS",
+      "summary": "状态自动推进、须有真实证据，回归测试通过，维护规则已挂接",
+      "source": "AGENT",
+      "required": true,
+      "files": [
+        "docs/agent-engineering/stage-08-maintenance.md"
+      ]
+    }
+  ],
+  "snapshots": {
+    "@stage-contract": "eb26b0559a37c39a0b5dd1557e4cc8be04da6f56836731d91c23d6eb57b34c8e",
+    "docs/agent-engineering/construction-workflow.md": "6c98cf48d1ad66fdab555fac2b623b1dde63f6e2daeb921a36a3b2ec2795dd5e",
+    "docs/agent-engineering/evidence/router-cases.json": "013bc7a1f06525e46a941b38b276a9e94bde29a2797160c8bdb96b361738de72",
+    "docs/agent-engineering/maintenance.md": "3011abda3efed22f0bfc5195566070d43cddb9899655db6f7130b3e0bd92b017",
+    "docs/agent-engineering/stage-08-maintenance.md": "f5d2819ef0aac2c84226bcaa7f3b4ae6883412b9cfd0066acb6fda0165e44060",
+    "infra/quality/router_policy.py": "8cc92b51d6831baa2268940855b73a075d5ccb0ce88e74ad4172cd35b972cd40",
+    "infra/quality/test_router.py": "faba8d4c4b409829eda94d44e5bfd811d9b8e7dfdd294d27143810afaaa8c0d3",
+    "infra/quality/test_workflow.py": "43d38fca7773f0b9b202198ec42ec37774b5cb83336b33efd81a6335c5cc2e31",
+    "infra/quality/workflow.py": "23fdd7c00e5a06d37af6c05d0d09e17481e4f7a5df4475c62274641e5d52e9cf",
+    "infra/quality/workflow_checks.py": "14fe71c60451c3f72d46aa5aee9359937c31e1604f7536f4b3546c0c3fddfb33"
+  },
+  "extra_inputs": [
+    "docs/agent-engineering/evidence/router-cases.json",
+    "infra/quality/router_policy.py",
+    "infra/quality/test_router.py",
+    "infra/quality/test_workflow.py",
+    "infra/quality/workflow.py"
+  ]
+}

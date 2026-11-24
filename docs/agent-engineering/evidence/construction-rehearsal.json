@@ -1,0 +1,75 @@
+{
+  "source": "TOOL",
+  "status": "PASS",
+  "scope": "Isolated copy of repository inputs, no service startup",
+  "commands": [
+    {
+      "command": [
+        "python",
+        "-X",
+        "utf8",
+        "infra/quality/workflow.py",
+        "init"
+      ],
+      "exit_code": 0
+    },
+    {
+      "command": [
+        "python",
+        "-X",
+        "utf8",
+        "infra/quality/workflow.py",
+        "run",
+        "--through",
+        "2"
+      ],
+      "exit_code": 1
+    },
+    {
+      "command": [
+        "python",
+        "-X",
+        "utf8",
+        "infra/quality/workflow.py",
+        "run",
+        "--through",
+        "2"
+      ],
+      "exit_code": 0
+    },
+    {
+      "command": [
+        "python",
+        "-X",
+        "utf8",
+        "infra/quality/workflow.py",
+        "start"
+      ],
+      "exit_code": 0
+    },
+    {
+      "command": [
+        "python",
+        "-X",
+        "utf8",
+        "infra/quality/workflow.py",
+        "run",
+        "--through",
+        "3"
+      ],
+      "exit_code": 0
+    },
+    {
+      "command": [
+        "python",
+        "-X",
+        "utf8",
+        "infra/quality/workflow.py",
+        "validate"
+      ],
+      "exit_code": 0
+    }
+  ],
+  "log": "target/harness-workflow/cli-rehearsal.log",
+  "summary": "Missing artifact blocked phase 2; repair retained failed evidence and auto-advanced. Separate process resumed phase 3."
+}

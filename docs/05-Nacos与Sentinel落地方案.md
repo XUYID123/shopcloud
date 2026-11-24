@@ -2,6 +2,8 @@
 
 修订日期：2026-10-14。Nacos 与 Sentinel 是本项目第一版的必选组件，本文件是实施设计，示例尚未在当前应用中执行。
 
+当前 M6 配置、实际规则名称和故障演练以[运行说明](../infra/stability/README.md)与 [M6 交付记录](agent-engineering/tasks/m6-stability.md)为准。交易消息现用 RocketMQ。
+
 ## 1. 固定职责与版本
 
 | 组件 | 版本 | 职责 |

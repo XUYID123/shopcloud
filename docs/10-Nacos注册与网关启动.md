@@ -45,7 +45,7 @@ Nacos 控制台位于 `http://localhost:8080/`。控制台登录与客户端注�
 |---|---|
 | `/api/v1/users`、`/api/v1/users/**`、`/api/v1/auth/**`、`/api/v1/addresses/**`（含根路径） | shop-user |
 | `/api/v1/products/**`、`/api/v1/categories/**`（含根路径）、`/api/v1/skus/**` 及对应商品管理路径 | shop-product |
-| `/api/v1/cart/**`（含根路径） | shop-cart |
+| `/api/v1/cart/**`（含根路径） | shop-order |
 | `/api/v1/orders/**`（含根路径）、`/api/v1/checkout/**`、订单管理路径 | shop-order |
 | `/api/v1/payment-sessions/**`（含根路径）、`/callbacks/payments/**` | shop-pay |
 
@@ -53,7 +53,7 @@ Nacos 控制台位于 `http://localhost:8080/`。控制台登录与客户端注�
 
 自动发现路由也保留：`/shop-product/路径` 转发到商品服务 `/路径`。`include-expression` 只允许五个明确的业务服务名，即使其他服务注册到同一 Nacos，也不会自动生成网关路由。common 和网关自身都被排除。
 
-四个新增业务模块尚无商品、购物车、订单和支付接口，因此注册成功、路由存在后，访问尚未实现的业务路径仍会返回 404。新增库存服务、测试支付接口或内部接口时应单独设计路由，不在本次配置中默认暴露。
+商品、库存入库和购物车的实际入口见[业务接口](business/README.md)。公开路径和权限由网关按服务路由管理，已实现的内部业务接口由调用服务直连。
 
 ## 验证方式
 

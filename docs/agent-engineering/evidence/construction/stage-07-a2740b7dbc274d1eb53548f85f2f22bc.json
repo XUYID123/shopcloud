@@ -1,0 +1,109 @@
+{
+  "workflow_version": "2.0.0",
+  "stage": 7,
+  "result": "PASS",
+  "recorded_at": "2026-11-20T09:12:52+00:00",
+  "checks": [
+    {
+      "id": "artifacts",
+      "status": "PASS",
+      "summary": "Nonempty repository artifacts hashed",
+      "source": "TOOL",
+      "required": true,
+      "files": [
+        "docs/agent-engineering/tasks/upgrade-rehearsal.md",
+        "docs/agent-engineering/evidence/router-cases.json",
+        "docs/agent-engineering/evidence/router-validation.md",
+        "docs/agent-engineering/stage-07-scenarios.md"
+      ]
+    },
+    {
+      "id": "local-links",
+      "status": "PASS",
+      "summary": "Checked local references in 3 Markdown artifacts",
+      "source": "TOOL",
+      "required": true,
+      "files": [
+        "docs/agent-engineering/tasks/upgrade-rehearsal.md",
+        "docs/agent-engineering/evidence/router-validation.md",
+        "docs/agent-engineering/stage-07-scenarios.md"
+      ]
+    },
+    {
+      "id": "business-rehearsals",
+      "status": "PASS",
+      "summary": "Verified two six-step reports and required coverage markers",
+      "source": "TOOL",
+      "required": true,
+      "files": [
+        "docs/agent-engineering/tasks/upgrade-rehearsal.md"
+      ],
+      "inputs": [
+        "docs/agent-engineering/tasks/upgrade-rehearsal.md"
+      ]
+    },
+    {
+      "id": "recovery-tests",
+      "status": "PASS",
+      "summary": "Executed local verifier",
+      "source": "TOOL",
+      "required": true,
+      "command": [
+        "python",
+        "-X",
+        "utf8",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "infra/quality",
+        "-v"
+      ],
+      "exit_code": 0,
+      "log": "target/harness-workflow/recovery-tests-83c5ba04998c440dbf0aace4b98bbb40.log",
+      "files": [
+        "infra/quality/workflow.py",
+        "infra/quality/test_workflow.py",
+        "infra/quality/router_policy.py",
+        "infra/quality/test_router.py",
+        "docs/agent-engineering/evidence/router-cases.json"
+      ],
+      "inputs": [
+        "infra/quality/workflow.py",
+        "infra/quality/test_workflow.py",
+        "infra/quality/router_policy.py",
+        "infra/quality/test_router.py",
+        "docs/agent-engineering/evidence/router-cases.json"
+      ]
+    },
+    {
+      "id": "agent-review",
+      "status": "PASS",
+      "summary": "两份业务演练齐全，设计与真实测试证据边界明确，十二类路由均验证",
+      "source": "AGENT",
+      "required": true,
+      "files": [
+        "docs/agent-engineering/stage-07-scenarios.md"
+      ]
+    }
+  ],
+  "snapshots": {
+    "@stage-contract": "934b08d97b7bac46edbe4705f5fbd46b96805623b0de410bc490f892837cb879",
+    "docs/agent-engineering/evidence/router-cases.json": "013bc7a1f06525e46a941b38b276a9e94bde29a2797160c8bdb96b361738de72",
+    "docs/agent-engineering/evidence/router-validation.md": "e9a988970696d68a101b971facb70ec67478e5446fc58fee71b5d7bb1f92e295",
+    "docs/agent-engineering/stage-07-scenarios.md": "091e95a1587448a97adc666a9c46022474a61f77f49bafdea34630c45b51121b",
+    "docs/agent-engineering/tasks/upgrade-rehearsal.md": "72646ceb6ecd3a6e8b840a392dd7ad7e5284075c6c9f131f18b4a8f062e959d1",
+    "infra/quality/router_policy.py": "8cc92b51d6831baa2268940855b73a075d5ccb0ce88e74ad4172cd35b972cd40",
+    "infra/quality/test_router.py": "faba8d4c4b409829eda94d44e5bfd811d9b8e7dfdd294d27143810afaaa8c0d3",
+    "infra/quality/test_workflow.py": "43d38fca7773f0b9b202198ec42ec37774b5cb83336b33efd81a6335c5cc2e31",
+    "infra/quality/workflow.py": "23fdd7c00e5a06d37af6c05d0d09e17481e4f7a5df4475c62274641e5d52e9cf"
+  },
+  "extra_inputs": [
+    "docs/agent-engineering/evidence/router-cases.json",
+    "docs/agent-engineering/tasks/upgrade-rehearsal.md",
+    "infra/quality/router_policy.py",
+    "infra/quality/test_router.py",
+    "infra/quality/test_workflow.py",
+    "infra/quality/workflow.py"
+  ]
+}

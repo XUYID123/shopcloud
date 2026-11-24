@@ -8,3 +8,7 @@
 2. 在 [ProductController](../../shop-product/src/main/java/org/spring/shopproduct/controller/ProductController.java) 找到已有 POST、@Valid、Result 和 VO；在 [ProductService](../../shop-product/src/main/java/org/spring/shopproduct/service/ProductService.java) 找到分类校验、业务异常和事务。新需求先确认与已有接口的差异，复用审计与内部凭据链。
 3. 持久化沿用 product schema 和分类外键/锁；新下架 SPU 本身无需新缓存或 MQ。涉及启用与公开读路径时再对照现有失效机制。测试非法分类、未授权、约束冲突和事务回滚。
 4. 核对中间件强制评估及消息专项清单。AGENTS 的链接可达，规则与项目事实、DoD 一致。
+
+## Harness 2.0 复核
+
+- [stage-03]: ACCEPTED · 2026-11-20 · 根入口先按意图路由，显式只读、测试与授权确认优先，业务流程仅适用于功能开发。

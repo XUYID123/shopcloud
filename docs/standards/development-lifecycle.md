@@ -1,6 +1,6 @@
 # 业务开发六步流程
 
-以 [feature-development](../../.agents/skills/feature-development/SKILL.md) 和 [AGENTS.md](../../AGENTS.md) 为入口。简单 CRUD 可在一份简短记录中完成六步，按风险补证据。
+这是功能开发工作流 B。按[任务路由](../agent-engineering/workflows/task-routing.md)进入 ROUTE-05，调用 [feature-development](../../.agents/skills/feature-development/SKILL.md)。先读取 [AGENTS.md](../../AGENTS.md)、模块局部约束、Docs、ADR，再检查相关 Controller、Service、Mapper、DTO/VO、相似业务和现有测试。简单 CRUD 可在一份简短记录中完成六步。复杂需求使用[独立任务记录](../agent-engineering/tasks/README.md)。
 
 | 步骤 | 动作与产物 | 进入下一步的条件 |
 |---|---|---|
@@ -12,6 +12,8 @@
 | 6. Delivery · 交付 | 通过 [DoD](definition-of-done.md)，记录需求、设计变更、文件、事务、Redis/MQ 取舍、异常日志、并发幂等、测试及剩余风险，更新契约、Docs 和 ADR | 从交付记录可追溯到实际代码和验证结果 |
 
 ## 技术设计的固定决策
+
+对 MySQL、Redis、RocketMQ、日志、业务异常、参数校验、权限与安全、性能、测试分别给出 `REQUIRED`、`NOT_REQUIRED` 或 `NEEDS_CONFIRMATION`，并引用现状或需求理由。REQUIRED 可表示复用已有组件。未决且影响实施的事项记录阻塞并先确认。
 
 - **MySQL**：记录是否持久化，表、索引、事务、锁和持久幂等。涉及迁移或 SQL 时使用 [database-design](../../.agents/skills/database-design/SKILL.md)。
 - **Redis**：记录必要性、Key、TTL、失效、并发回填、故障与补偿。变更缓存时使用 [redis-design](../../.agents/skills/redis-design/SKILL.md)。

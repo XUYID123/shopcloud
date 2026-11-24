@@ -1,8 +1,10 @@
 package org.spring.shopuser;
 
 import org.spring.shopcommon.result.GlobalExceptionHandler;
+import org.spring.shopuser.config.AddressProperties;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Import;
 
 /**
@@ -10,6 +12,7 @@ import org.springframework.context.annotation.Import;
  * common 是依赖模块而非父级扫描包，通过 @Import 明确注册其 MVC 全局异常处理器。
  */
 @SpringBootApplication
+@EnableConfigurationProperties(AddressProperties.class)
 @Import(GlobalExceptionHandler.class)
 public class ShopUserApplication {
 

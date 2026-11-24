@@ -1,8 +1,10 @@
 # 建设检查点
 
-最后通过阶段 **8**。**最终验收通过**，详见[最终验收报告](final-acceptance-report.md)。
+当前建设状态以 [progress.json](progress.json) 和实际证据为准。查看[本轮升级验收](upgrade-acceptance-report.md)，或使用[恢复命令](construction-workflow.md)核对已通过阶段并从失配位置继续。此页下方保留 **2026-11-19 原八阶段验收**，详见[历史验收报告](final-acceptance-report.md)。
 
-从项目根目录的[原任务书](../../Java%20Agent%20Engineering%20Harness%20建设任务书.md)读取目标阶段，先重验最后通过阶段的证据，再开始下一阶段。进行中的演练、实现和失败证据保存在阶段报告。保持已有工作区变更。
+阶段约定见[阶段契约](stages.json)和[原任务书](../../Java%20Agent%20Engineering%20Harness%20建设任务书.md)。日常任务从[任务路由](workflows/task-routing.md)进入并使用独立记录。
+
+## 历史验收
 
 - `STAGE_1_STATUS = PASS` · [stage-01-audit.md](stage-01-audit.md) · 已对照模块、组件、迁移、Redis、消息状态和工程风险。
 - `STAGE_2_STATUS = PASS` · [stage-02-knowledge-base.md](stage-02-knowledge-base.md) · 知识库、组件目录、规则和 ADR 已落盘，18 个 Markdown 文件的链接通过检查。

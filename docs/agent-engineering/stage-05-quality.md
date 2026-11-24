@@ -24,3 +24,7 @@
 首次 Docker Hub 请求失败，本机改用已按 Apache 官方 SHA-512 确认的 Broker 5.5.1 发行包构建临时测试镜像，CI 默认配置为官方 5.5.0 镜像。修复了 Proxy 路由广告返回容器地址的问题，已确认 Compose 栈容器、网络和测试卷由门禁清理。[本地复验说明](quality-gate.md)
 
 业务专用 FIFO、死信重放、积压和 HA 故障验收需按实际业务协议和生产拓扑实施。后续场景以设计演练验证这些要求。
+
+## Harness 2.0 复核
+
+- [stage-05]: ACCEPTED · 2026-11-20 · 阶段 5 应用范围与既有 Maven、RocketMQ、OSV 原始日志匹配。当前托管工作流运行情况为 NOT_RUN。

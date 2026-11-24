@@ -1,0 +1,49 @@
+{
+  "workflow_version": "2.0.0",
+  "stage": 3,
+  "result": "PASS",
+  "recorded_at": "2026-11-20T09:06:41+00:00",
+  "checks": [
+    {
+      "id": "artifacts",
+      "status": "PASS",
+      "summary": "Nonempty repository artifacts hashed",
+      "source": "TOOL",
+      "required": true,
+      "files": [
+        "AGENTS.md",
+        "docs/agent-engineering/workflows/task-routing.md",
+        "docs/agent-engineering/stage-03-agents.md"
+      ]
+    },
+    {
+      "id": "local-links",
+      "status": "PASS",
+      "summary": "Checked local references in 3 Markdown artifacts",
+      "source": "TOOL",
+      "required": true,
+      "files": [
+        "AGENTS.md",
+        "docs/agent-engineering/workflows/task-routing.md",
+        "docs/agent-engineering/stage-03-agents.md"
+      ]
+    },
+    {
+      "id": "agent-review",
+      "status": "PASS",
+      "summary": "只读与写入边界清晰，任务进入单一主流程，链接有效",
+      "source": "AGENT",
+      "required": true,
+      "files": [
+        "docs/agent-engineering/stage-03-agents.md"
+      ]
+    }
+  ],
+  "snapshots": {
+    "@stage-contract": "c651d33a18680c71d901ebc20e70cc955df7ec49a8f0001752f04509fd21f06e",
+    "AGENTS.md": "634787649d7f44e4e1dbe6bf5486d6ba731d4b7337f7058791d91adb18ed9950",
+    "docs/agent-engineering/stage-03-agents.md": "12ed76230b122e4374e29b04eb89aa9762233b1f5cd3157b017940a749f9a0c2",
+    "docs/agent-engineering/workflows/task-routing.md": "208b4639fa287ba4c2ac77f04acd11ecca73791762871b3ece0361a9bafc7002"
+  },
+  "extra_inputs": []
+}

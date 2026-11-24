@@ -27,7 +27,10 @@ spring:
     nacos:
       discovery:
         server-addr: ${NACOS_SERVER_ADDR:localhost:8848}
-        group: DEFAULT_GROUP
+        group: ${NACOS_DISCOVERY_GROUP:DEFAULT_GROUP}
+        namespace: ${NACOS_NAMESPACE:}
+        username: ${NACOS_USERNAME:}
+        password: ${NACOS_PASSWORD:}
     gateway:
       server:
         webflux:
@@ -51,7 +54,7 @@ spring:
                 - Path=/api/v1/admin/inventory/batches
                 - Method=POST
             - id: shop-cart-api
-              uri: lb://shop-cart
+              uri: lb://shop-order
               predicates:
                 - Path=/api/v1/cart,/api/v1/cart/**
             - id: shop-order-api
@@ -61,7 +64,7 @@ spring:
             - id: shop-pay-api
               uri: lb://shop-pay
               predicates:
-                - Path=/api/v1/payment-sessions,/api/v1/payment-sessions/**,/callbacks/payments/**
+                - Path=/api/v1/payment-sessions,/api/v1/payment-sessions/**,/api/v1/test/payment-sessions/**,/callbacks/payments/**
             # Retain the existing /api/user/** test entry.
             - id: user_service_route
               uri: lb://shop-user
@@ -77,6 +80,8 @@ spring:
         port: 8719 # 客户端与控制台的通信端口，若默认8719被占用会自动顺延
 
 gateway:
+  sentinel:
+    nacos-rules-enabled: ${SHOP_GATEWAY_SENTINEL_NACOS_RULES_ENABLED:false}
   internal-jwt:
     private-key-location: ${SHOP_GATEWAY_INTERNAL_PRIVATE_KEY_LOCATION:file:../infra/local-secrets/gateway-internal-private.pem}
     ttl: 45s
@@ -100,7 +105,7 @@ gateway:
     key-prefix: shop:rbac:v1
     whitelist:
       - methods: [POST]
-        paths: [/api/v1/users, /api/v1/auth/sessions, /api/auth/login, /api/auth/refresh, /api/auth/logout]
+        paths: [/api/v1/users, /api/v1/auth/sessions, /api/auth/login, /api/auth/refresh, /api/auth/logout, /callbacks/payments/MOCK]
       - methods: [GET]
         paths: [/api/v1/products, /api/v1/products/**, /api/v1/categories, /api/v1/categories/**, '/api/v1/skus/{skuId}']
   protection:

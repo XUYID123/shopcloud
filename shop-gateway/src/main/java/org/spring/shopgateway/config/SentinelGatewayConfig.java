@@ -11,13 +11,16 @@ import com.alibaba.csp.sentinel.adapter.gateway.sc.callback.GatewayCallbackManag
 import com.alibaba.csp.sentinel.adapter.gateway.sc.exception.SentinelGatewayBlockExceptionHandler;
 import com.alibaba.csp.sentinel.config.SentinelConfig;
 import jakarta.annotation.PostConstruct;
+import org.spring.shopcommon.protection.NacosQpsRule;
 import org.spring.shopgateway.web.GatewayResponses;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.DependsOn;
 import org.springframework.core.annotation.Order;
+import org.springframework.core.env.Environment;
 import org.springframework.http.MediaType;
 import org.springframework.http.codec.ServerCodecConfigurer;
 import org.springframework.web.reactive.function.server.ServerResponse;
@@ -46,7 +49,7 @@ public class SentinelGatewayConfig {
     }
 
     /**
-     * 启动时装载本地规则。控制台运行期间的修改只影响内存，当前未接入规则持久化。
+     * 启动时装载本地默认规则。启用 Nacos 后，在启动完成前替换为持久化规则。
      */
     @PostConstruct
     public void initialize() {
@@ -58,13 +61,28 @@ public class SentinelGatewayConfig {
                 .setPredicateItems(Set.of(new ApiPathPredicateItem().setPattern("/**")
                         .setMatchStrategy(SentinelGatewayConstants.PARAM_MATCH_STRATEGY_PREFIX)))));
         // 针对分组而非单条路由设限，避免每条路由分别获得一份容量额度。
-        GatewayRuleManager.loadRules(Set.of(new GatewayFlowRule("gateway.capacity")
-                .setResourceMode(SentinelGatewayConstants.RESOURCE_MODE_CUSTOM_API_NAME)
-                .setCount(properties.sentinelQps()).setIntervalSec(1)));
+        applyCapacity(properties.sentinelQps());
         // 被 Sentinel 拒绝时直接返回 429；Retry-After 单位为秒，响应体沿用 common 的格式。
         GatewayCallbackManager.setBlockHandler((exchange, throwable) -> ServerResponse.status(429)
                 .contentType(MediaType.APPLICATION_JSON).header("Retry-After", "1")
                 .bodyValue(responses.body(exchange, "RATE_LIMITED", "请求过多，请稍后重试")));
+    }
+
+    @Bean(destroyMethod = "close")
+    @ConditionalOnProperty(name = "gateway.sentinel.nacos-rules-enabled", havingValue = "true")
+    NacosQpsRule gatewayCapacityRule(Environment environment) throws Exception {
+        return NacosQpsRule.open(
+                environment.getRequiredProperty("spring.cloud.nacos.discovery.server-addr"),
+                environment.getProperty("spring.cloud.nacos.discovery.namespace", ""),
+                environment.getProperty("spring.cloud.nacos.discovery.username", ""),
+                environment.getProperty("spring.cloud.nacos.discovery.password", ""),
+                "shop-gateway-capacity.json", SentinelGatewayConfig::applyCapacity);
+    }
+
+    private static void applyCapacity(int qps) {
+        GatewayRuleManager.loadRules(Set.of(new GatewayFlowRule("gateway.capacity")
+                .setResourceMode(SentinelGatewayConstants.RESOURCE_MODE_CUSTOM_API_NAME)
+                .setCount(qps).setIntervalSec(1)));
     }
 
     /** 把 Sentinel 自带适配器加入 GlobalFilter 链；-200 先于防刷和认证，不与 WebFilter 混排。 */

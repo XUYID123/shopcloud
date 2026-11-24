@@ -3,7 +3,7 @@
   "info": {
     "title": "面粉商城第一版RESTful API契约",
     "version": "1.11.0-partial",
-    "description": "修订于2026-10-30。用户注册及网关Sentinel限流、Redis防刷已实现，其余业务接口为待实现设计。RESTful API + JSON；目标架构采用Nacos注册发现/配置和Sentinel流控/熔断。单商家/单仓/袋装/CNY/Mock支付。内部接口禁止公网路由，业务规则见docs/03-接口文档.md，网关保护见docs/11-网关限流与Redis防刷.md。\n本次新增已实现的 /api/auth/login、refresh、logout 双 Token 接口。旧 /api/v1/auth 会话契约仍是后续设计，不能混作当前实现。访问令牌过期返回 401 ACCESS_TOKEN_EXPIRED；其他认证失败按 INVALID_ACCESS_TOKEN、INVALID_CREDENTIALS、INVALID_REFRESH_TOKEN 区分。\n内部转发已升级为网关逐请求签发的短期 JWT；所有客户端业务接口通过网关访问，客户端不提交 X-Internal-Token。\n已实现 GET /api/v1/categories，公开返回启用分类的 categoryId/name/sort。\n2026-10-31 已实现 POST /api/v1/admin/products：检查启用分类，创建 OFF_SHELF SPU，version=1，skus=[]，不创建 SKU/库存。"
+    "description": "包含已实现与规划中的 RESTful API。当前实际入口见 docs/business/README.md，业务约定见 docs/03-接口文档.md。商城采用单商家、单仓、袋装、CNY，规划使用 Mock 支付。客户端走网关，网关向下游签发逐请求内部 JWT，客户端无需提供 X-Internal-Token。内部业务接口由调用服务直连并携带独立凭据。\n用户认证已实现 /api/auth/login、refresh、logout。访问令牌过期返回 401 ACCESS_TOKEN_EXPIRED，其他认证失败按 INVALID_ACCESS_TOKEN、INVALID_CREDENTIALS、INVALID_REFRESH_TOKEN 区分。"
   },
   "servers": [
     {
@@ -124,7 +124,7 @@
           "用户"
         ],
         "summary": "本人地址列表，最多20条",
-        "description": "本人地址列表，最多20条",
+        "description": "查询本人地址，最多 20 条。默认地址在前，其余按 addressId 降序。空地址簿返回空数组。",
         "security": [
           {
             "bearerAuth": []
@@ -140,13 +140,16 @@
         ],
         "responses": {
           "200": {
-            "description": "成功或幂等重试返回现有结果",
+            "description": "操作成功",
             "headers": {
               "X-Request-Id": {
                 "$ref": "#/components/headers/RequestId"
               },
               "X-Trace-Id": {
                 "$ref": "#/components/headers/TraceId"
+              },
+              "Cache-Control": {
+                "schema": {"type": "string", "enum": ["no-store"]}
               }
             },
             "content": {
@@ -166,15 +169,6 @@
           "403": {
             "$ref": "#/components/responses/Error403"
           },
-          "404": {
-            "$ref": "#/components/responses/Error404"
-          },
-          "409": {
-            "$ref": "#/components/responses/Error409"
-          },
-          "422": {
-            "$ref": "#/components/responses/Error422"
-          },
           "429": {
             "$ref": "#/components/responses/Error429"
           },
@@ -182,7 +176,9 @@
             "$ref": "#/components/responses/Error503"
           }
         },
-        "x-service": "shop-user"
+        "x-service": "shop-user",
+        "x-implementation-status": "implemented",
+        "x-required-permission": "address:write:own"
       },
       "post": {
         "operationId": "createAddress",
@@ -190,7 +186,7 @@
           "用户"
         ],
         "summary": "新增本人地址",
-        "description": "新增本人地址",
+        "description": "新增本人地址，每人最多 20 条。isDefault 为 true 时在同一事务内替换原默认地址。行政区由 shop-user 白名单校验。",
         "security": [
           {
             "bearerAuth": []
@@ -213,6 +209,13 @@
               },
               "X-Trace-Id": {
                 "$ref": "#/components/headers/TraceId"
+              },
+              "Location": {
+                "description": "新地址的资源标识 /api/v1/addresses/{addressId}",
+                "schema": {"type": "string"}
+              },
+              "Cache-Control": {
+                "schema": {"type": "string", "enum": ["no-store"]}
               }
             },
             "content": {
@@ -249,6 +252,8 @@
           }
         },
         "x-service": "shop-user",
+        "x-implementation-status": "implemented",
+        "x-required-permission": "address:write:own",
         "requestBody": {
           "required": true,
           "content": {
@@ -268,7 +273,7 @@
           "用户"
         ],
         "summary": "完整替换本人地址",
-        "description": "完整替换本人地址",
+        "description": "完整替换本人地址。设为默认时在同一事务内取消其他默认地址。地址不存在或不属于本人时返回 404。",
         "security": [
           {
             "bearerAuth": []
@@ -284,10 +289,10 @@
             "required": true,
             "schema": {
               "type": "string",
-              "description": "JSON ID 使用字符串",
+              "description": "正整数形式的地址 ID，最大值为有符号 64 位整数上限",
               "minLength": 1,
-              "maxLength": 64,
-              "pattern": "^[A-Za-z0-9][A-Za-z0-9_-]{0,63}$",
+              "maxLength": 19,
+              "pattern": "^[1-9][0-9]{0,18}$",
               "example": "2001"
             }
           },
@@ -297,13 +302,16 @@
         ],
         "responses": {
           "200": {
-            "description": "成功或幂等重试返回现有结果",
+            "description": "操作成功",
             "headers": {
               "X-Request-Id": {
                 "$ref": "#/components/headers/RequestId"
               },
               "X-Trace-Id": {
                 "$ref": "#/components/headers/TraceId"
+              },
+              "Cache-Control": {
+                "schema": {"type": "string", "enum": ["no-store"]}
               }
             },
             "content": {
@@ -326,9 +334,6 @@
           "404": {
             "$ref": "#/components/responses/Error404"
           },
-          "409": {
-            "$ref": "#/components/responses/Error409"
-          },
           "422": {
             "$ref": "#/components/responses/Error422"
           },
@@ -340,6 +345,8 @@
           }
         },
         "x-service": "shop-user",
+        "x-implementation-status": "implemented",
+        "x-required-permission": "address:write:own",
         "requestBody": {
           "required": true,
           "content": {
@@ -357,7 +364,7 @@
           "用户"
         ],
         "summary": "删除本人地址，订单快照保留",
-        "description": "删除本人地址，订单快照保留",
+        "description": "从本人地址簿删除地址。地址不存在或不属于本人时返回 404。删除默认地址后由用户重新选择默认地址。",
         "security": [
           {
             "bearerAuth": []
@@ -373,10 +380,10 @@
             "required": true,
             "schema": {
               "type": "string",
-              "description": "JSON ID 使用字符串",
+              "description": "正整数形式的地址 ID，最大值为有符号 64 位整数上限",
               "minLength": 1,
-              "maxLength": 64,
-              "pattern": "^[A-Za-z0-9][A-Za-z0-9_-]{0,63}$",
+              "maxLength": 19,
+              "pattern": "^[1-9][0-9]{0,18}$",
               "example": "2001"
             }
           },
@@ -386,13 +393,16 @@
         ],
         "responses": {
           "200": {
-            "description": "成功或幂等重试返回现有结果",
+            "description": "操作成功",
             "headers": {
               "X-Request-Id": {
                 "$ref": "#/components/headers/RequestId"
               },
               "X-Trace-Id": {
                 "$ref": "#/components/headers/TraceId"
+              },
+              "Cache-Control": {
+                "schema": {"type": "string", "enum": ["no-store"]}
               }
             },
             "content": {
@@ -415,12 +425,6 @@
           "404": {
             "$ref": "#/components/responses/Error404"
           },
-          "409": {
-            "$ref": "#/components/responses/Error409"
-          },
-          "422": {
-            "$ref": "#/components/responses/Error422"
-          },
           "429": {
             "$ref": "#/components/responses/Error429"
           },
@@ -428,7 +432,9 @@
             "$ref": "#/components/responses/Error503"
           }
         },
-        "x-service": "shop-user"
+        "x-service": "shop-user",
+        "x-implementation-status": "implemented",
+        "x-required-permission": "address:write:own"
       }
     },
     "/api/v1/categories": {
@@ -777,7 +783,7 @@
           "购物车"
         ],
         "summary": "本人购物车，包括失效商品",
-        "description": "本人购物车，包括失效商品",
+        "description": "已实现。USER 或 ADMIN 通过网关读取本人购物车。按 SKU ID 升序返回，最多 20 项。展示价格和规格以商品服务当前状态为准。失效 SKU 保留 skuId 和 quantity，availableForSale 为 false，其他展示字段为 null。",
         "security": [
           {
             "bearerAuth": []
@@ -835,7 +841,9 @@
             "$ref": "#/components/responses/Error503"
           }
         },
-        "x-service": "shop-order"
+        "x-service": "shop-order",
+        "x-implementation-status": "implemented",
+        "x-required-permission": "cart:write:own"
       }
     },
     "/api/v1/cart/items/{skuId}": {
@@ -845,7 +853,7 @@
           "购物车"
         ],
         "summary": "设置绝对袋数，不累加",
-        "description": "设置绝对袋数，不累加",
+        "description": "已实现。设置本人购物车中指定 SKU 的绝对数量。购物车最多 20 种 SKU。可售规格缺失返回 404 SKU_NOT_FOUND，新增第 21 种规格返回 409 CART_LIMIT_EXCEEDED，满额时仍可调整已有可售规格。",
         "security": [
           {
             "bearerAuth": []
@@ -861,10 +869,10 @@
             "required": true,
             "schema": {
               "type": "string",
-              "description": "JSON ID 使用字符串",
+              "description": "十进制正整数 SKU ID，最大为 9223372036854775807",
               "minLength": 1,
-              "maxLength": 64,
-              "pattern": "^[A-Za-z0-9][A-Za-z0-9_-]{0,63}$",
+              "maxLength": 19,
+              "pattern": "^[1-9][0-9]{0,18}$",
               "example": "2001"
             }
           },
@@ -917,6 +925,8 @@
           }
         },
         "x-service": "shop-order",
+        "x-implementation-status": "implemented",
+        "x-required-permission": "cart:write:own",
         "requestBody": {
           "required": true,
           "content": {
@@ -934,7 +944,7 @@
           "购物车"
         ],
         "summary": "移除购物车SKU，不存在也成功",
-        "description": "移除购物车SKU，不存在也成功",
+        "description": "已实现。仅从调用方购物车删除指定 SKU，记录缺失时同样返回 200 和 null。",
         "security": [
           {
             "bearerAuth": []
@@ -950,10 +960,10 @@
             "required": true,
             "schema": {
               "type": "string",
-              "description": "JSON ID 使用字符串",
+              "description": "十进制正整数 SKU ID，最大为 9223372036854775807",
               "minLength": 1,
-              "maxLength": 64,
-              "pattern": "^[A-Za-z0-9][A-Za-z0-9_-]{0,63}$",
+              "maxLength": 19,
+              "pattern": "^[1-9][0-9]{0,18}$",
               "example": "2001"
             }
           },
@@ -1005,7 +1015,9 @@
             "$ref": "#/components/responses/Error503"
           }
         },
-        "x-service": "shop-order"
+        "x-service": "shop-order",
+        "x-implementation-status": "implemented",
+        "x-required-permission": "cart:write:own"
       }
     },
     "/api/v1/checkout/quotes": {
@@ -1015,7 +1027,7 @@
           "订单"
         ],
         "summary": "计算并保存5分钟结算报价",
-        "description": "检查地址归属、SKU 可售、每项数量、最多20种SKU及500kg总重；只支持服务端配送白名单，不锁库存。",
+        "description": "已实现，默认关闭。检查本人地址、可售 SKU 和配送白名单。接受 1–20 个不重复 SKU，每种 1–100 袋，总重不超过 500 kg。按 FREIGHT_V1 算费并持久化 5 分钟报价。商品失效、不支持配送、超重或超金额限额返回 422。",
         "security": [
           {
             "bearerAuth": []
@@ -1074,6 +1086,8 @@
           }
         },
         "x-service": "shop-order",
+        "x-implementation-status": "implemented",
+        "x-required-permission": "order:create",
         "requestBody": {
           "required": true,
           "content": {
@@ -1093,7 +1107,7 @@
           "订单"
         ],
         "summary": "受理订单并异步预占库存",
-        "description": "首次本地事务完成返回202 PREPARING；UNPAID 才能支付。复用幂等键返回同一订单当前结果；quoteId只能消费一次。",
+        "description": "已实现。复核本人报价后保存订单与预占事件，首次返回 202 PREPARING。同一幂等键和报价返回当前订单，离开 PREPARING 后为 200。报价只能消费一次；每个账号最多 5 笔活跃订单。",
         "security": [
           {
             "bearerAuth": []
@@ -1185,6 +1199,8 @@
           }
         },
         "x-service": "shop-order",
+        "x-implementation-status": "implemented",
+        "x-required-permission": "order:create",
         "requestBody": {
           "required": true,
           "content": {
@@ -1194,8 +1210,7 @@
               }
             }
           }
-        },
-        "x-sentinel-resource": "order.create"
+        }
       },
       "get": {
         "operationId": "listOrders",
@@ -1203,7 +1218,7 @@
           "订单"
         ],
         "summary": "本人订单游标列表",
-        "description": "本人订单游标列表",
+        "description": "已实现。按创建时间及主键倒序查询本人订单，游标绑定当前用户和状态筛选。",
         "security": [
           {
             "bearerAuth": []
@@ -1303,7 +1318,9 @@
             "$ref": "#/components/responses/Error503"
           }
         },
-        "x-service": "shop-order"
+        "x-service": "shop-order",
+        "x-implementation-status": "implemented",
+        "x-required-permission": "order:read:own"
       }
     },
     "/api/v1/orders/{orderNo}": {
@@ -1313,7 +1330,7 @@
           "订单"
         ],
         "summary": "本人订单与库存/支付状态",
-        "description": "异步缺货时返回200，orderStatus=FAILED、failureCode=STOCK_NOT_ENOUGH。",
+        "description": "已实现。返回本人订单快照和库存状态。预占成功进入 UNPAID 并产生 15 分钟支付期限；缺货或没有可用批次时订单进入 FAILED，查询仍返回 200。非本人统一返回 404。",
         "security": [
           {
             "bearerAuth": []
@@ -1384,7 +1401,9 @@
             "$ref": "#/components/responses/Error503"
           }
         },
-        "x-service": "shop-order"
+        "x-service": "shop-order",
+        "x-implementation-status": "implemented",
+        "x-required-permission": "order:read:own"
       }
     },
     "/api/v1/orders/{orderNo}/receipt": {
@@ -1395,6 +1414,7 @@
         ],
         "summary": "更新订单收货确认子资源",
         "description": "PUT单例receipt，完整请求为received=true；仅本人SHIPPED订单可确认，重复返回原receivedAt，服务端同步更新COMPLETED。",
+        "x-required-permission": "order:read:own",
         "security": [
           {
             "bearerAuth": []
@@ -1567,7 +1587,9 @@
             "$ref": "#/components/responses/Error503"
           }
         },
-        "x-service": "shop-payment",
+        "x-service": "shop-pay",
+        "x-implementation-status": "implemented",
+        "x-required-permission": "order:create",
         "requestBody": {
           "required": true,
           "content": {
@@ -1659,7 +1681,9 @@
             "$ref": "#/components/responses/Error503"
           }
         },
-        "x-service": "shop-payment"
+        "x-service": "shop-pay",
+        "x-implementation-status": "implemented",
+        "x-required-permission": "order:read:own"
       }
     },
     "/callbacks/payments/{provider}": {
@@ -1759,7 +1783,8 @@
             "$ref": "#/components/responses/Error503"
           }
         },
-        "x-service": "shop-payment",
+        "x-service": "shop-pay",
+        "x-implementation-status": "implemented",
         "requestBody": {
           "required": true,
           "content": {
@@ -2603,6 +2628,7 @@
         ],
         "summary": "管理端订单游标查询",
         "description": "管理端订单游标查询",
+        "x-required-permission": "order:read:any",
         "security": [
           {
             "bearerAuth": []
@@ -2727,7 +2753,8 @@
           "订单管理"
         ],
         "summary": "管理端任意订单详情",
-        "description": "管理端任意订单详情",
+        "description": "需 order:read:any。PAID 且 CONFIRMED 时附带当前 allocation。发货后可通过 shipment.allocations 查看发货时的批次快照。",
+        "x-required-permission": "order:read:any",
         "security": [
           {
             "bearerAuth": []
@@ -2809,7 +2836,8 @@
           "订单管理"
         ],
         "summary": "录入物流并发货",
-        "description": "仅PAID+CONFIRMED且分配批次有效/可售，第一版每订单一张物流单；写批次快照与审计。",
+        "description": "仅 PAID + SUCCEEDED + CONFIRMED 且分配批次有效、可售时发货。每个订单一张物流单，重试返回原物流单与订单当前状态。",
+        "x-required-permission": "order:ship",
         "security": [
           {
             "bearerAuth": []
@@ -2922,10 +2950,10 @@
           "内部"
         ],
         "summary": "订单服务读取所属用户地址",
-        "description": "订单服务读取所属用户地址",
+        "description": "已实现，默认关闭。启用后，仅 shop-order 可直连 shop-user 读取指定启用账号的地址。服务 JWT 绑定方法、完整路径和原始查询串，签名有效期 45 秒。地址查询响应禁止缓存。地址缺失、归属不符或账号停用均返回 404。",
         "security": [
           {
-            "serviceToken": []
+            "scopedServiceJwt": []
           }
         ],
         "parameters": [
@@ -2938,10 +2966,10 @@
             "required": true,
             "schema": {
               "type": "string",
-              "description": "JSON ID 使用字符串",
+              "description": "地址 ID，十进制正整数，最大为 9223372036854775807",
               "minLength": 1,
-              "maxLength": 64,
-              "pattern": "^[A-Za-z0-9][A-Za-z0-9_-]{0,63}$",
+              "maxLength": 19,
+              "pattern": "^[1-9][0-9]{0,18}$",
               "example": "2001"
             }
           },
@@ -2949,14 +2977,14 @@
             "name": "userId",
             "in": "query",
             "required": true,
-            "description": "userId",
+            "description": "订单服务从已验证的会话取得用户 ID，查询参数必须恰好出现一次。",
             "schema": {
               "type": "string",
-              "description": "JSON ID 使用字符串",
+              "description": "用户 ID，十进制正整数，最大为 9223372036854775807",
               "minLength": 1,
-              "maxLength": 64,
-              "pattern": "^[A-Za-z0-9][A-Za-z0-9_-]{0,63}$",
-              "example": "2001"
+              "maxLength": 19,
+              "pattern": "^[1-9][0-9]{0,18}$",
+              "example": "1001"
             }
           },
           {
@@ -2965,8 +2993,14 @@
         ],
         "responses": {
           "200": {
-            "description": "成功或幂等重试返回现有结果",
+            "description": "成功读取所属用户的地址",
             "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string",
+                  "enum": ["no-store"]
+                }
+              },
               "X-Request-Id": {
                 "$ref": "#/components/headers/RequestId"
               },
@@ -2994,28 +3028,19 @@
           "404": {
             "$ref": "#/components/responses/Error404"
           },
-          "409": {
-            "$ref": "#/components/responses/Error409"
-          },
-          "422": {
-            "$ref": "#/components/responses/Error422"
-          },
-          "429": {
-            "$ref": "#/components/responses/Error429"
-          },
           "503": {
             "$ref": "#/components/responses/Error503"
           }
         },
-        "x-service": "internal",
+        "x-service": "shop-user",
+        "x-implementation-status": "implemented",
         "x-required-service-scope": "order:address:read",
         "servers": [
           {
             "url": "http://localhost:8081",
             "description": "内部接口直连服务；不可由公网网关访问"
           }
-        ],
-        "x-sentinel-caller-resource": "dependency.user.address"
+        ]
       }
     },
     "/internal/v1/products/quotes": {
@@ -3025,10 +3050,10 @@
           "内部"
         ],
         "summary": "读取最新可售商品报价",
-        "description": "权威写节点读取价格/版本，不能使用陈旧展示缓存。",
+        "description": "已实现，默认关闭。仅允许 shop-order 使用独立服务 JWT 直连，使用商品库读取当前可售状态、价格、重量和商品版本。任一规格不可售时整批返回 422 PRODUCT_UNAVAILABLE。",
         "security": [
           {
-            "serviceToken": []
+            "scopedServiceJwt": []
           }
         ],
         "parameters": [
@@ -3083,7 +3108,8 @@
             "$ref": "#/components/responses/Error503"
           }
         },
-        "x-service": "internal",
+        "x-service": "shop-product",
+        "x-implementation-status": "implemented",
         "x-required-service-scope": "order:product:quote",
         "servers": [
           {
@@ -3100,8 +3126,7 @@
               }
             }
           }
-        },
-        "x-sentinel-caller-resource": "dependency.product.quote"
+        }
       }
     },
     "/internal/v1/inventory/reservations/{orderNo}": {
@@ -3111,10 +3136,10 @@
           "内部"
         ],
         "summary": "预占状态对账查询",
-        "description": "预占状态对账查询",
+        "description": "已实现。订单服务使用独立服务 JWT 直连，读取库存预占状态、分配和失败原因。",
         "security": [
           {
-            "serviceToken": []
+            "scopedServiceJwt": []
           }
         ],
         "parameters": [
@@ -3182,11 +3207,12 @@
             "$ref": "#/components/responses/Error503"
           }
         },
-        "x-service": "internal",
+        "x-service": "shop-inventory",
+        "x-implementation-status": "implemented",
         "x-required-service-scope": "order:inventory:read",
         "servers": [
           {
-            "url": "http://localhost:8083",
+            "url": "http://localhost:8086",
             "description": "内部接口直连服务；不可由公网网关访问"
           }
         ]
@@ -3199,10 +3225,10 @@
           "内部"
         ],
         "summary": "读取订单批次分配与可发货标志",
-        "description": "读取订单批次分配与可发货标志",
+        "description": "已实现。订单服务使用独立服务 JWT 直连。只有已确认扣减并且分配批次均可售、未过期时，返回 shippable=true。",
         "security": [
           {
-            "serviceToken": []
+            "scopedServiceJwt": []
           }
         ],
         "parameters": [
@@ -3270,11 +3296,12 @@
             "$ref": "#/components/responses/Error503"
           }
         },
-        "x-service": "internal",
+        "x-service": "shop-inventory",
+        "x-implementation-status": "implemented",
         "x-required-service-scope": "order:inventory:read",
         "servers": [
           {
-            "url": "http://localhost:8083",
+            "url": "http://localhost:8086",
             "description": "内部接口直连服务；不可由公网网关访问"
           }
         ]
@@ -3290,7 +3317,7 @@
         "description": "支付服务核验订单归属与金额",
         "security": [
           {
-            "serviceToken": []
+            "scopedServiceJwt": []
           }
         ],
         "parameters": [
@@ -3372,7 +3399,8 @@
             "$ref": "#/components/responses/Error503"
           }
         },
-        "x-service": "internal",
+        "x-service": "shop-order",
+        "x-implementation-status": "implemented",
         "x-required-service-scope": "payment:order:read",
         "servers": [
           {
@@ -3392,7 +3420,7 @@
         "description": "支付控制与补偿对账查询",
         "security": [
           {
-            "serviceToken": []
+            "scopedServiceJwt": []
           }
         ],
         "parameters": [
@@ -3460,7 +3488,8 @@
             "$ref": "#/components/responses/Error503"
           }
         },
-        "x-service": "internal",
+        "x-service": "shop-pay",
+        "x-implementation-status": "implemented",
         "x-required-service-scope": "order:payment:read",
         "servers": [
           {
@@ -3972,6 +4001,8 @@
           }
         },
         "x-service": "shop-order",
+        "x-implementation-status": "implemented",
+        "x-required-permission": "order:create",
         "requestBody": {
           "required": true,
           "content": {
@@ -4075,7 +4106,9 @@
             }
           }
         },
-        "x-service": "shop-order"
+        "x-service": "shop-order",
+        "x-implementation-status": "implemented",
+        "x-required-permission": "order:read:own"
       }
     },
     "/api/v1/test/payment-sessions/{paymentNo}/payment-events": {
@@ -4189,7 +4222,9 @@
             }
           }
         },
-        "x-service": "shop-payment",
+        "x-service": "shop-pay",
+        "x-implementation-status": "implemented",
+        "x-required-permission": "payment:mock:admin",
         "x-required-role": "ADMIN",
         "requestBody": {
           "required": true,
@@ -4294,7 +4329,9 @@
             }
           }
         },
-        "x-service": "shop-payment",
+        "x-service": "shop-pay",
+        "x-implementation-status": "implemented",
+        "x-required-permission": "payment:mock:admin",
         "x-required-role": "ADMIN"
       }
     },
@@ -4700,6 +4737,8 @@
               "ABUSE_LIMITED",
               "DEPENDENCY_UNAVAILABLE",
               "USERNAME_EXISTS",
+              "ADDRESS_LIMIT_EXCEEDED",
+              "ADDRESS_REGION_UNSUPPORTED",
               "VERSION_CONFLICT",
               "CIRCUIT_OPEN",
               "RULES_NOT_READY",
@@ -5649,10 +5688,10 @@
         "properties": {
           "skuId": {
             "type": "string",
-            "description": "JSON ID 使用字符串",
+            "description": "十进制正整数 SKU ID，最大为 9223372036854775807",
             "minLength": 1,
-            "maxLength": 64,
-            "pattern": "^[A-Za-z0-9][A-Za-z0-9_-]{0,63}$",
+            "maxLength": 19,
+            "pattern": "^[1-9][0-9]{0,18}$",
             "example": "2001"
           },
           "quantity": {
@@ -5674,10 +5713,10 @@
         "properties": {
           "addressId": {
             "type": "string",
-            "description": "JSON ID 使用字符串",
+            "description": "十进制正整数地址 ID，最大为 9223372036854775807",
             "minLength": 1,
-            "maxLength": 64,
-            "pattern": "^[A-Za-z0-9][A-Za-z0-9_-]{0,63}$",
+            "maxLength": 19,
+            "pattern": "^[1-9][0-9]{0,18}$",
             "example": "2001"
           },
           "items": {
@@ -6074,6 +6113,14 @@
           },
           "shipment": {
             "$ref": "#/components/schemas/Shipment"
+          },
+          "allocation": {
+            "description": "仅后台订单详情在 PAID 且 CONFIRMED 时返回的实时分配结果。",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Allocation"
+              }
+            ]
           },
           "failureCode": {
             "type": "string",
@@ -8471,6 +8518,12 @@
         "in": "header",
         "name": "X-Service-Token",
         "description": "开发用独立服务凭证，绑定调用者/audience/scope；生产mTLS或服务JWT"
+      },
+      "scopedServiceJwt": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "X-Internal-Token",
+        "description": "调用服务独立签发的 RS256 shop-service+jwt，绑定调用者、受众、scope、HTTP 方法和路径。地址查询同时绑定原始查询串。"
       },
       "mockSignature": {
         "type": "apiKey",

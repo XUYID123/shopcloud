@@ -2,9 +2,11 @@
 
 ## Agent 工程知识库
 
+[项目速览](../README.md) · [项目状态](../PROJECT_STATUS.md) · [会话交接](../SESSION_HANDOFF.md) · [本地快速启动](architecture/local-development.md) · [任务索引](agent-engineering/tasks/README.md) · [跨会话验收](agent-engineering/context-initialization-acceptance.md)
+
 当前框架和消息接入以[架构](architecture/README.md)和[消息](messaging/README.md)为准。基线审计保留建设初始快照，根目录版本变更以 POM 为准。
 
-建设初始实现参阅 [项目审计](agent-engineering/stage-01-audit.md)、以下知识页和源码为准。下方历史说明中的推荐版本、RabbitMQ、订单和支付按当时规划阅读。
+初始实现参阅 [项目审计](agent-engineering/stage-01-audit.md)。下方历史说明中的推荐版本、RabbitMQ、订单和支付按当时规划阅读。
 
 - [架构](architecture/README.md) · [公共组件](architecture/component-catalog.md)
 - [工程规则](standards/README.md) · [Definition of Done](standards/definition-of-done.md)
@@ -12,10 +14,13 @@
 - [RocketMQ](messaging/README.md) · [数据库与消息一致性](messaging/database-consistency.md)
 - [安全](security/README.md) · [业务](business/README.md) · [ADR](decisions/README.md)
 - [建设检查点](agent-engineering/checkpoint.md) · [工程规范维护](agent-engineering/maintenance.md)
+- [任务路由](agent-engineering/workflows/task-routing.md) · [工程建设与恢复](agent-engineering/construction-workflow.md) · [日常任务记录](agent-engineering/tasks/README.md) · [验收证据](agent-engineering/evidence/README.md)
 
-设计日期：2026-10-13；修订日期：2026-11-02。状态：**部分实现，其余为设计与接口契约**。
+## 历史实施记录（截至 2026-11-02）
 
-shop-user 的 Docker MySQL、Flyway RBAC 迁移及用户注册接口已落地，见 08/09 文档；五个业务服务的 Nacos 注册及网关转发配置已落地，见 10 文档；网关 Sentinel 容量保护和 Redis 防刷见 11 文档。完整商城和其余接口仍待实现。当前使用 JDK 17 / Boot 3.2.5；user 已接入 MyBatis-Plus 3.5.7，其余业务默认 MyBatis 3.0.3，与下方目标架构分开说明。OpenAPI 版本为 1.11.0-partial。
+初始设计日期为 2026-10-13。当时状态为部分实现，其余内容属于设计与接口契约。
+
+shop-user 的 Docker MySQL、Flyway RBAC 迁移及用户注册接口已落地，见 08/09 文档；五个业务服务的 Nacos 注册及网关转发配置已落地，见 10 文档；网关 Sentinel 容量保护和 Redis 防刷见 11 文档。完整商城和其余接口仍待实现。当时使用 JDK 17 / Boot 3.2.5；user 已接入 MyBatis-Plus 3.5.7，其余业务默认 MyBatis 3.0.3，与下方目标架构分开说明。OpenAPI 版本为 1.11.0-partial。
 
 网关公钥 JWT 认证与动态 RBAC 已实现，最新方案为 Redis 权限缓存、OpenFeign 回源 shop-user、数据库更新后删除缓存，见 17 文档。Caffeine 与权限广播已移除；用户注册接入事务失效 outbox。JJWT 双 Token 登录/刷新/登出已实现，见 20 文档；角色管理仍待业务阶段实现。
 

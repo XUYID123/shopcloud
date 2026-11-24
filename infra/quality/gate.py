@@ -50,10 +50,20 @@ def lint(base):
         for mapper in (module / "src/main/resources/mapper").glob("*.xml"):
             ET.parse(mapper)
     docs = ROOT / "docs"
-    markdown = [ROOT / "AGENTS.md", docs / "README.md"]
+    markdown = [ROOT / name for name in ("AGENTS.md", "README.md", "PROJECT_STATUS.md", "SESSION_HANDOFF.md")]
+    markdown.append(docs / "README.md")
     for folder in DOC_DIRS:
         markdown.extend((docs / folder).rglob("*.md"))
     skills = sorted((ROOT / ".agents/skills").glob("*/SKILL.md"))
+    check_skill_metadata(skills)
+    check_markdown_links(ROOT, markdown + skills)
+    from workflow import Workflow
+    from workflow_checks import CHECKS
+    Workflow(ROOT, CHECKS).validate()
+    print(f"Static checks passed: {len(markdown)} Markdown files, {len(skills)} skills, reactor POMs and mapper XML", flush=True)
+
+
+def check_skill_metadata(skills):
     required = {"feature-development", "database-design", "redis-design", "rocketmq-design",
                 "concurrency-design", "security-review", "code-review"}
     if not required.issubset({skill.parent.name for skill in skills}):
@@ -62,17 +72,19 @@ def lint(base):
         content = skill.read_text(encoding="utf-8")
         match = re.match(r"^---\nname: ([a-z0-9-]+)\ndescription: (\S[^\n]*)\n---\n", content)
         if not match or match[1] != skill.parent.name:
-            raise ValueError(f"Invalid skill frontmatter: {skill.relative_to(ROOT)}")
-    for path in markdown + skills:
+            raise ValueError(f"Invalid skill frontmatter: {skill.name} in {skill.parent.name}")
+
+
+def check_markdown_links(root, markdown):
+    for path in markdown:
         content = path.read_text(encoding="utf-8-sig")
         content = re.sub(r"(?ms)^`{3,}[^\n]*\n.*?^`{3,}[^\n]*$", "", content)
         for link in re.findall(r"\]\(([^)#]+)(?:#[^)]*)?\)", content):
             if re.match(r"^[a-z][a-z0-9+.-]*:", link, re.I):
                 continue
             target = (path.parent / unquote(link)).resolve()
-            if not target.is_relative_to(ROOT) or not target.exists():
-                raise ValueError(f"Broken local link in {path.relative_to(ROOT)}: {link}")
-    print(f"Static checks passed: {len(markdown)} Markdown files, {len(skills)} skills, reactor POMs and mapper XML", flush=True)
+            if not target.is_relative_to(root) or not target.exists():
+                raise ValueError(f"Broken local link in {path.relative_to(root)}: {link}")
 
 
 def scan_secrets(gitleaks):
@@ -173,7 +185,8 @@ def full(args, env):
         run(*compose, "up", "-d", "--wait", "--wait-timeout", "160", env=docker_env)
         run(*compose, "exec", "-T", "mysql-product", "sh", "-c",
             'MYSQL_PWD="$MYSQL_ROOT_PASSWORD" mysql -uroot -e "CREATE DATABASE flour_messaging_test; '
-            "GRANT ALL ON flour_messaging_test.* TO 'harness'@'%';\"", env=docker_env)
+            "GRANT ALL ON flour_messaging_test.* TO 'harness'@'%'; "
+            "CREATE DATABASE flour_order; GRANT ALL ON flour_order.* TO 'harness'@'%';\"", env=docker_env)
         admin = [*compose, "exec", "-T", "rocketmq-broker", "sh", "mqadmin"]
         nameserver = ["-n", "rocketmq-nameserver:9876", "-c", "DefaultCluster"]
         run(*admin, "updateTopic", *nameserver, "-t", "shop-harness-events", "-a", "+message.type=NORMAL",
@@ -196,6 +209,8 @@ def full(args, env):
             HARNESS_DB_PASSWORD=docker_env["HARNESS_DB_PASSWORD"],
             SHOP_PRODUCT_MYSQL_HOST="127.0.0.1", SHOP_PRODUCT_MYSQL_PORT=ports["mysql-product"],
             SHOP_PRODUCT_MYSQL_USER="harness", SHOP_PRODUCT_MYSQL_PASSWORD=docker_env["HARNESS_DB_PASSWORD"],
+            SHOP_ORDER_MYSQL_HOST="127.0.0.1", SHOP_ORDER_MYSQL_PORT=ports["mysql-product"],
+            SHOP_ORDER_MYSQL_USER="harness", SHOP_ORDER_MYSQL_PASSWORD=docker_env["HARNESS_DB_PASSWORD"],
             SHOP_INVENTORY_MYSQL_HOST="127.0.0.1", SHOP_INVENTORY_MYSQL_PORT=ports["mysql-inventory"],
             SHOP_INVENTORY_MYSQL_USER="harness", SHOP_INVENTORY_MYSQL_PASSWORD=docker_env["HARNESS_DB_PASSWORD"],
         )

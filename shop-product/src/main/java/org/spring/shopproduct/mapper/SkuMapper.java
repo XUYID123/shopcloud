@@ -2,7 +2,11 @@ package org.spring.shopproduct.mapper;
 
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
+import org.spring.shopcommon.checkout.ProductQuote;
 import org.spring.shopproduct.entity.SkuEntity;
+import org.spring.shopproduct.vo.CartSkuVO;
+
+import java.util.List;
 
 /** SKU 持久化端口，复用商品服务的数据源和本地事务。 */
 @Mapper
@@ -11,6 +15,10 @@ public interface SkuMapper {
     Integer selectShelfLifeDays(@Param("skuId") long skuId);
     /** 只读取可公开展示的单个 SKU。 */
     SkuEntity selectVisibleById(@Param("skuId") long skuId);
+
+    List<CartSkuVO> selectCartMetadata(@Param("skuIds") List<Long> skuIds);
+
+    List<ProductQuote.Line> selectQuoteLines(@Param("skuIds") List<Long> skuIds);
 
     /** 商城详情仅展示启用规格，按主键稳定排序；使用普通快照读。 */
     java.util.List<SkuEntity> selectEnabledByProduct(@org.apache.ibatis.annotations.Param("productId") long productId);

@@ -51,12 +51,27 @@ public final class ScopedServiceJwt {
     }
 
     public static String sign(RSAPrivateKey key, Scope scope, String method, String path, Clock clock) {
+        return sign(key, scope, method, path, null, clock);
+    }
+
+    /** rawQuery is exactly the string sent after '?', or null when absent. */
+    public static String signWithQuery(RSAPrivateKey key, Scope scope, String method, String path,
+                                       String rawQuery, Clock clock) {
+        return sign(key, scope, method, path, queryHash(rawQuery), clock);
+    }
+
+    private static String sign(RSAPrivateKey key, Scope scope, String method, String path,
+                               String queryHash, Clock clock) {
         var now = clock.instant();
         return Jwts.builder().header().type(TYPE).and().issuer(scope.caller()).subject(scope.caller())
                 .audience().add(scope.audience()).and().claim("scope", scope.permission())
-                .claim("method", method).claim("path", path).id(UUID.randomUUID().toString())
+                .claim("method", method).claim("path", path).claim("queryHash", queryHash).id(UUID.randomUUID().toString())
                 .issuedAt(Date.from(now)).expiration(Date.from(now.plusSeconds(45)))
                 .signWith(key, Jwts.SIG.RS256).compact();
+    }
+
+    private static String queryHash(String rawQuery) {
+        return InternalJwtProtocol.digest(rawQuery == null ? "" : rawQuery);
     }
 
     /** 注册到接收服务的白名单时，只为一个方法和路径模式使用此验签器。 */
@@ -64,29 +79,41 @@ public final class ScopedServiceJwt {
         private final JwtParser parser;
         private final Scope scope;
         private final Clock clock;
+        private final boolean queryBound;
 
         public Verifier(RSAPublicKey key, Scope scope, Clock clock) {
+            this(key, scope, clock, false);
+        }
+
+        public static Verifier forQueryBoundEndpoint(RSAPublicKey key, Scope scope, Clock clock) {
+            return new Verifier(key, scope, clock, true);
+        }
+
+        private Verifier(RSAPublicKey key, Scope scope, Clock clock, boolean queryBound) {
             this.scope = scope;
             this.clock = clock;
+            this.queryBound = queryBound;
             parser = Jwts.parser().verifyWith(key).requireIssuer(scope.caller()).requireSubject(scope.caller())
                     .require("scope", scope.permission()).clock(() -> Date.from(clock.instant()))
                     .sig().clear().add(Jwts.SIG.RS256).and().build();
         }
 
         public InternalIdentity verify(String token, String method, String path, String query) {
-            if (token == null || token.length() > 8192 || query != null) throw invalid();
+            if (token == null || token.length() > 8192 || (!queryBound && query != null)) throw invalid();
             try {
                 var signed = parser.parseSignedClaims(token);
                 var claims = signed.getPayload();
                 var issued = claims.getIssuedAt();
                 var expires = claims.getExpiration();
                 String jti = claims.getId();
+                String signedQueryHash = claims.get("queryHash", String.class);
                 var now = clock.instant();
                 if (!TYPE.equals(signed.getHeader().getType()) || !Set.of(scope.audience()).equals(claims.getAudience())
                         || issued == null || expires == null || issued.toInstant().isAfter(now)
                         || !expires.after(issued) || expires.toInstant().isAfter(issued.toInstant().plusSeconds(60))
                         || !expires.toInstant().isAfter(now) || jti == null
-                        || !method.equals(claims.get("method", String.class)) || !path.equals(claims.get("path", String.class))) {
+                        || !method.equals(claims.get("method", String.class)) || !path.equals(claims.get("path", String.class))
+                        || (queryBound ? !queryHash(query).equals(signedQueryHash) : signedQueryHash != null)) {
                     throw invalid();
                 }
                 return new InternalIdentity(null, "service", InternalJwtProtocol.digest(scope.permission()), jti);

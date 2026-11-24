@@ -7,3 +7,10 @@ __pycache__/
 !.env.example
 /infra/local-secrets/*
 !/infra/local-secrets/.gitignore
+
+# Local account-specific CRM catalog
+/shop-web/catalog-review.json
+
+# Generated order-flow film and visual review outputs
+/media/order-flow/renders/
+/media/order-flow/review/

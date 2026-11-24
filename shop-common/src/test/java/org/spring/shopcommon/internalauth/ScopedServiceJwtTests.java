@@ -19,6 +19,30 @@ class ScopedServiceJwtTests {
     private static final ScopedServiceJwt.Scope SCOPE = new ScopedServiceJwt.Scope(
             "shop-inventory", "shop-product", "product:stock-metadata:read");
 
+    @Test void queryBindingIsExplicitAndUsesTheRawQuery() throws Exception {
+        var generator = java.security.KeyPairGenerator.getInstance("RSA");
+        generator.initialize(2048);
+        var signer = generator.generateKeyPair();
+        var key = (RSAPrivateKey) signer.getPrivate();
+        var publicKey = (RSAPublicKey) signer.getPublic();
+        var bound = ScopedServiceJwt.Verifier.forQueryBoundEndpoint(publicKey, SCOPE, CLOCK);
+        var queryless = new ScopedServiceJwt.Verifier(publicKey, SCOPE, CLOCK);
+        String query = "userId=12&reference=a%20b";
+        String queryToken = ScopedServiceJwt.signWithQuery(key, SCOPE, "GET", PATH, query, CLOCK);
+        String querylessToken = ScopedServiceJwt.sign(key, SCOPE, "GET", PATH, CLOCK);
+
+        assertThat(bound.verify(queryToken, "GET", PATH, query).kind()).isEqualTo("service");
+        for (String changed : List.of("userId=13&reference=a%20b", "reference=a%20b&userId=12", "userId=12&reference=a+b")) {
+            assertThatIllegalArgumentException().isThrownBy(() -> bound.verify(queryToken, "GET", PATH, changed));
+        }
+        assertThatIllegalArgumentException().isThrownBy(() -> bound.verify(queryToken, "GET", PATH, null));
+        assertThatIllegalArgumentException().isThrownBy(() -> bound.verify(querylessToken, "GET", PATH, null));
+        assertThatIllegalArgumentException().isThrownBy(() -> queryless.verify(queryToken, "GET", PATH, query));
+        String emptyQueryToken = ScopedServiceJwt.signWithQuery(key, SCOPE, "GET", PATH, null, CLOCK);
+        assertThat(bound.verify(emptyQueryToken, "GET", PATH, null).kind()).isEqualTo("service");
+        assertThatIllegalArgumentException().isThrownBy(() -> queryless.verify(emptyQueryToken, "GET", PATH, null));
+    }
+
     @Test void isolatesServiceCredentialsByKeyPurposeAudiencePathMethodAndTime() throws Exception {
         var generator = java.security.KeyPairGenerator.getInstance("RSA");
         generator.initialize(2048);

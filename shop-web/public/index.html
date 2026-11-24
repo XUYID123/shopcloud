@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="面粉商城，按用途选择面粉、包装规格并整理采购清单。">
+  <title>麦仓 · 面粉商城</title>
+  <link rel="stylesheet" href="/styles.css">
+  <script type="module" src="/app.js"></script>
+</head>
+<body>
+  <header class="header">
+    <div class="wrap header-bar">
+      <a class="brand" href="/">麦仓 <small>面粉商城</small></a>
+      <nav aria-label="商城导航">
+        <a href="#catalog">选购面粉</a>
+        <button class="plain" id="account" type="button">登录</button>
+        <button class="bag-button" id="bag-open" type="button">购物袋 <span id="bag-count">0</span></button>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero">
+      <div class="wrap hero-inner">
+        <div class="hero-copy">
+          <h1>从一袋好面粉开始</h1>
+          <p>按用途找面粉，按规格选包装。</p>
+          <a class="button hero-link" href="#catalog">浏览面粉</a>
+        </div>
+        <div class="hero-image" aria-hidden="true"></div>
+      </div>
+    </section>
+
+    <section class="wrap catalog" id="catalog" aria-labelledby="catalog-title">
+      <div class="catalog-heading"><h2 id="catalog-title">面粉选购</h2><span id="catalog-count"></span></div>
+      <p><a href="/crm-catalog">CRM 商品目录</a></p>
+      <form class="filters" id="filters">
+        <label>搜索商品 <input name="keyword" type="search" placeholder="输入商品名或品牌" maxlength="50"></label>
+        <label>分类 <select name="categoryId" id="category"><option value="">全部分类</option></select></label>
+        <label>排序 <select name="sort"><option value="DEFAULT">默认</option><option value="PRICE_ASC">价格从低到高</option><option value="PRICE_DESC">价格从高到低</option></select></label>
+        <button class="button primary" type="submit">搜索</button>
+      </form>
+      <div class="message" id="catalog-message" role="status">正在读取商品…</div>
+      <div class="product-grid" id="products"></div>
+      <div class="pagination" id="pagination" hidden>
+        <button type="button" class="plain" id="previous">上一页</button><span id="page-number"></span><button type="button" class="plain" id="next">下一页</button>
+      </div>
+    </section>
+  </main>
+
+  <dialog id="panel" class="panel" aria-labelledby="panel-title">
+    <div class="panel-head"><h2 id="panel-title"></h2><button class="icon-button" type="button" id="panel-close" aria-label="关闭">×</button></div>
+    <div class="panel-body" id="panel-body"></div>
+  </dialog>
+  <footer><div class="wrap">麦仓 · 面粉商城</div></footer>
+</body>
+</html>

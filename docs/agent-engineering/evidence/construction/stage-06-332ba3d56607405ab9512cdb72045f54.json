@@ -1,0 +1,49 @@
+{
+  "workflow_version": "2.0.0",
+  "stage": 6,
+  "result": "PASS",
+  "recorded_at": "2026-11-20T09:12:50+00:00",
+  "checks": [
+    {
+      "id": "artifacts",
+      "status": "PASS",
+      "summary": "Nonempty repository artifacts hashed",
+      "source": "TOOL",
+      "required": true,
+      "files": [
+        "docs/standards/development-lifecycle.md",
+        "docs/agent-engineering/tasks/README.md",
+        "docs/agent-engineering/stage-06-lifecycle.md"
+      ]
+    },
+    {
+      "id": "local-links",
+      "status": "PASS",
+      "summary": "Checked local references in 3 Markdown artifacts",
+      "source": "TOOL",
+      "required": true,
+      "files": [
+        "docs/standards/development-lifecycle.md",
+        "docs/agent-engineering/tasks/README.md",
+        "docs/agent-engineering/stage-06-lifecycle.md"
+      ]
+    },
+    {
+      "id": "agent-review",
+      "status": "PASS",
+      "summary": "既有业务流程可追溯，简单任务保持轻量，复杂任务有独立记录入口",
+      "source": "AGENT",
+      "required": true,
+      "files": [
+        "docs/agent-engineering/stage-06-lifecycle.md"
+      ]
+    }
+  ],
+  "snapshots": {
+    "@stage-contract": "8cb140926b5d7efd7a022f8fbe209cc4cc36c9bc7e2a175c008c46fbf6e68362",
+    "docs/agent-engineering/stage-06-lifecycle.md": "7bf3bfc4e8229f92104a9241551fb56f06dad263b04b26e1694934e4a7c81a41",
+    "docs/agent-engineering/tasks/README.md": "0ffca9c9f050350f377d63c485bf3617f490d6d15b4881d8a606f286204d17f7",
+    "docs/standards/development-lifecycle.md": "da4c478baf348f8f9ec5aec37aec2d2ff96be653397c4629f56eda68095c3701"
+  },
+  "extra_inputs": []
+}

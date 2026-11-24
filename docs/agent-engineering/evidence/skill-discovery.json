@@ -1,0 +1,35 @@
+{
+  "id": "codex-app-server",
+  "status": "PASS",
+  "summary": "App Server found 7 enabled repository skills",
+  "source": "TOOL",
+  "required": true,
+  "command": [
+    "codex",
+    "app-server",
+    "--stdio"
+  ],
+  "rpc": "skills/list; cwd=repository root; forceReload=true",
+  "exit_code": 0,
+  "log": "target/harness-workflow/skill-discovery.log",
+  "files": [
+    ".agents/skills/code-review/SKILL.md",
+    ".agents/skills/concurrency-design/SKILL.md",
+    ".agents/skills/database-design/SKILL.md",
+    ".agents/skills/feature-development/SKILL.md",
+    ".agents/skills/redis-design/SKILL.md",
+    ".agents/skills/rocketmq-design/SKILL.md",
+    ".agents/skills/security-review/SKILL.md"
+  ],
+  "observed_hashes": {
+    ".agents/skills/code-review/SKILL.md": "b2f7d62fb0e9c19c3884e5475e4b6dbb1d7f5a83ddf7336d5e39e901ebb4be19",
+    ".agents/skills/concurrency-design/SKILL.md": "759af39316c347d47131f5ed3a3a5efec30ff0991b84415a8beeb11d73eb572e",
+    ".agents/skills/database-design/SKILL.md": "3298c07e818fb23a5c00b08a26dc6c71897f0283475d46ce2f79a2ea2fc45269",
+    ".agents/skills/feature-development/SKILL.md": "70d51f7ffa328c8b95261236548748e0ebb76ef70f1d3b69f4214e89613345eb",
+    ".agents/skills/redis-design/SKILL.md": "c69ede1f99384d387a3e2089d4136fa114113f8cc35cd26bbd24d95601e9d506",
+    ".agents/skills/rocketmq-design/SKILL.md": "ecd8f0a7b6ccf0df95d0b1ff89f7aa897f3a5cfb172f3d39d3d19fd4aae45708",
+    ".agents/skills/security-review/SKILL.md": "51b16971c7d0b5a2516dc5f2e07b6383063506ee5d9c271f03afe31d1878e784"
+  },
+  "recorded_at": "2026-11-20T09:05:55+00:00",
+  "automatic_trigger": "NOT_VERIFIED"
+}

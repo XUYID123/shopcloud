@@ -7,7 +7,11 @@ spring:
   cloud:
     nacos:
       discovery:
-        server-addr: localhost:8848
+        server-addr: ${NACOS_SERVER_ADDR:localhost:8848}
+        group: ${NACOS_DISCOVERY_GROUP:DEFAULT_GROUP}
+        namespace: ${NACOS_NAMESPACE:}
+        username: ${NACOS_USERNAME:}
+        password: ${NACOS_PASSWORD:}
   http:
     converters:
       preferred-json-mapper: jackson2
@@ -53,6 +57,13 @@ mybatis-plus:
     default-statement-timeout: 3
 
 shop:
+  address:
+    regions:
+      "[310115]": 上海市浦东新区
+  user:
+    order-address-lookup:
+      enabled: ${SHOP_USER_ORDER_ADDRESS_LOOKUP_ENABLED:false}
+      public-key-location: ${SHOP_ORDER_ADDRESS_SIGNING_PUBLIC_KEY_LOCATION:file:../infra/local-secrets/order-user-public.pem}
   internal-auth:
     public-key-location: ${SHOP_GATEWAY_INTERNAL_PUBLIC_KEY_LOCATION:file:../infra/local-secrets/gateway-internal-public.pem}
     public-endpoints:

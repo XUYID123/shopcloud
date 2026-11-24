@@ -1,0 +1,73 @@
+{
+  "workflow_version": "2.0.0",
+  "stage": 2,
+  "result": "PASS",
+  "recorded_at": "2026-11-20T09:06:41+00:00",
+  "checks": [
+    {
+      "id": "artifacts",
+      "status": "PASS",
+      "summary": "Nonempty repository artifacts hashed",
+      "source": "TOOL",
+      "required": true,
+      "files": [
+        "docs/README.md",
+        "docs/architecture/README.md",
+        "docs/architecture/component-catalog.md",
+        "docs/database/README.md",
+        "docs/middleware/README.md",
+        "docs/messaging/README.md",
+        "docs/security/README.md",
+        "docs/business/README.md",
+        "docs/standards/README.md",
+        "docs/decisions/README.md",
+        "docs/agent-engineering/stage-02-knowledge-base.md"
+      ]
+    },
+    {
+      "id": "local-links",
+      "status": "PASS",
+      "summary": "Checked local references in 11 Markdown artifacts",
+      "source": "TOOL",
+      "required": true,
+      "files": [
+        "docs/README.md",
+        "docs/architecture/README.md",
+        "docs/architecture/component-catalog.md",
+        "docs/database/README.md",
+        "docs/middleware/README.md",
+        "docs/messaging/README.md",
+        "docs/security/README.md",
+        "docs/business/README.md",
+        "docs/standards/README.md",
+        "docs/decisions/README.md",
+        "docs/agent-engineering/stage-02-knowledge-base.md"
+      ]
+    },
+    {
+      "id": "agent-review",
+      "status": "PASS",
+      "summary": "权威来源易定位，引用有效，既有业务事实有依据",
+      "source": "AGENT",
+      "required": true,
+      "files": [
+        "docs/agent-engineering/stage-02-knowledge-base.md"
+      ]
+    }
+  ],
+  "snapshots": {
+    "@stage-contract": "c3ffac26856ce7cba989d634796af6390e27c210f0bcd771d877e19902170f8a",
+    "docs/README.md": "74ca19880b25e2bb43d074f41b768804ef0ef3bffb20e39be3f0519e450f9a07",
+    "docs/agent-engineering/stage-02-knowledge-base.md": "17a1ed68b43b3fe7c3a2a610773c4c1a64e53e5117b4d79d2631bf4058444eb5",
+    "docs/architecture/README.md": "28a180aa5b9bdad25934ebdce9e5a2bdda7f8e8c2751a1b1453a1726a89f5701",
+    "docs/architecture/component-catalog.md": "e02332de2ff5b0d26f81ff98d3ed0df0568ceef0b3f730180d2bf91ba140d506",
+    "docs/business/README.md": "68882d007885c41d0911a29f7b5cc48071902cf07924d8fc8423c9cbef0ee1ec",
+    "docs/database/README.md": "dc198e7ac51bc78d66d6fbab77ed84d393e30b303ea1f72f5318f15a82b4a737",
+    "docs/decisions/README.md": "c0329b590dba24b5758bbf5c0ecd7f4b99d4d148c70db787b85c943908bca9fe",
+    "docs/messaging/README.md": "e8e0964bc18dd4503a130214414eb007380127dd67d7b910e5cac4563cc5d9cf",
+    "docs/middleware/README.md": "c178976d222b6cc8defa4e2ab5791c5a421d8588935717f27d31bcb912540e21",
+    "docs/security/README.md": "8f2c2f54887d892e95d1a837ada7a73c4db41ad965f351e82d1e86d0f5a17191",
+    "docs/standards/README.md": "397f25a24ba4bcb25a90d987109dee0d105ef29dcdb870e9ba9870244f54eef5"
+  },
+  "extra_inputs": []
+}

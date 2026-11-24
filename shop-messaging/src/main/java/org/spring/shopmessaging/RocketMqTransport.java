@@ -15,7 +15,9 @@ import org.slf4j.LoggerFactory;
 import java.nio.ByteBuffer;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.UUID;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 public final class RocketMqTransport {
@@ -57,26 +59,35 @@ public final class RocketMqTransport {
     }
 
     public PushConsumer subscribe(String group, String tag, Consumer<MessageEvent> handler) throws ClientException {
-        requireName(group, "group");
-        requireName(tag, "tag");
         Objects.requireNonNull(handler, "handler");
+        return subscribe(group, Set.of(tag), (receivedTag, event) -> handler.accept(event));
+    }
+
+    public PushConsumer subscribe(String group, Set<String> tags, BiConsumer<String, MessageEvent> handler) throws ClientException {
+        requireName(group, "group");
+        Objects.requireNonNull(handler, "handler");
+        Set<String> allowed = Set.copyOf(tags);
+        if (allowed.isEmpty()) throw new IllegalArgumentException("At least one RocketMQ tag is required");
+        String expression = String.join("||", allowed.stream().map(tag -> requireName(tag, "tag")).sorted().toList());
         return provider.newPushConsumerBuilder()
                 .setClientConfiguration(configuration)
                 .setConsumerGroup(group)
-                .setSubscriptionExpressions(Map.of(topic, new FilterExpression(tag, FilterExpressionType.TAG)))
-                .setMessageListener(message -> consume(message, group, handler))
+                .setSubscriptionExpressions(Map.of(topic, new FilterExpression(expression, FilterExpressionType.TAG)))
+                .setMessageListener(message -> consume(message, group, allowed, handler))
                 .build();
     }
 
-    private ConsumeResult consume(MessageView message, String group, Consumer<MessageEvent> handler) {
+    private ConsumeResult consume(MessageView message, String group, Set<String> tags, BiConsumer<String, MessageEvent> handler) {
         MessageEvent event = null;
         try {
+            String tag = message.getTag().orElseThrow(() -> new IllegalArgumentException("Missing message tag"));
+            if (!tags.contains(tag)) throw new IllegalArgumentException("Unexpected message tag");
             event = decode(message);
-            handler.accept(event);
+            handler.accept(tag, event);
             return ConsumeResult.SUCCESS;
         } catch (RuntimeException failure) {
-            log.warn("event=ROCKETMQ_CONSUME_FAILED topic={} group={} messageId={} eventId={} traceId={} errorType={}",
-                    topic, group, message.getMessageId(),
+            log.warn("event=ROCKETMQ_CONSUME_FAILED topic={} group={} messageId={} deliveryAttempt={} eventId={} traceId={} errorType={}",
+                    topic, group, message.getMessageId(), message.getDeliveryAttempt(),
                     event == null ? "-" : event.eventId(), event == null ? "-" : event.traceId(),
                     failure.getClass().getSimpleName());
             return ConsumeResult.FAILURE;
@@ -90,7 +101,7 @@ public final class RocketMqTransport {
             throw new IllegalArgumentException("Message key does not match event ID");
         }
         ByteBuffer buffer = message.getBody().asReadOnlyBuffer();
-        if (buffer.remaining() > 256 * 1024) {
+        if (buffer.remaining() > MessageEvent.MAX_BODY_BYTES) {
             throw new IllegalArgumentException("Message body exceeds the application limit");
         }
         byte[] body = new byte[buffer.remaining()];

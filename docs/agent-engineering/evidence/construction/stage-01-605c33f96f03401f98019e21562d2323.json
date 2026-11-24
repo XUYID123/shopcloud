@@ -1,0 +1,98 @@
+{
+  "workflow_version": "2.0.0",
+  "stage": 1,
+  "result": "PASS",
+  "recorded_at": "2026-11-20T09:06:40+00:00",
+  "checks": [
+    {
+      "id": "artifacts",
+      "status": "PASS",
+      "summary": "Nonempty repository artifacts hashed",
+      "source": "TOOL",
+      "required": true,
+      "files": [
+        "pom.xml",
+        "docs/agent-engineering/stage-01-audit.md"
+      ]
+    },
+    {
+      "id": "maven-reactor",
+      "status": "PASS",
+      "summary": "Parsed root POM and 10 module POMs",
+      "source": "TOOL",
+      "required": true,
+      "files": [
+        "pom.xml",
+        "shop-base-parent/pom.xml",
+        "shop-common/pom.xml",
+        "shop-cache/pom.xml",
+        "shop-messaging/pom.xml",
+        "shop-user/pom.xml",
+        "shop-gateway/pom.xml",
+        "shop-product/pom.xml",
+        "shop-cart/pom.xml",
+        "shop-order/pom.xml",
+        "shop-pay/pom.xml"
+      ],
+      "inputs": [
+        "shop-base-parent/pom.xml",
+        "shop-common/pom.xml",
+        "shop-cache/pom.xml",
+        "shop-messaging/pom.xml",
+        "shop-user/pom.xml",
+        "shop-gateway/pom.xml",
+        "shop-product/pom.xml",
+        "shop-cart/pom.xml",
+        "shop-order/pom.xml",
+        "shop-pay/pom.xml"
+      ]
+    },
+    {
+      "id": "local-links",
+      "status": "PASS",
+      "summary": "Checked local references in 1 Markdown artifacts",
+      "source": "TOOL",
+      "required": true,
+      "files": [
+        "docs/agent-engineering/stage-01-audit.md"
+      ]
+    },
+    {
+      "id": "agent-review",
+      "status": "PASS",
+      "summary": "模块真实存在，历史版本标识清楚，未实现能力有边界",
+      "source": "AGENT",
+      "required": true,
+      "files": [
+        "docs/agent-engineering/stage-01-audit.md"
+      ]
+    }
+  ],
+  "snapshots": {
+    "@stage-contract": "858e3a6777ca8a0ac79e754f4ed992ce091f8c339a6705737de454bf4bda2aa4",
+    "docs/agent-engineering/stage-01-audit.md": "f1ea1914db8256410bb5632f2e1d84f0926dc14f3ca0a76d77e54c27ba7d0807",
+    "pom.xml": "d0fab4d100a28e5db43bfa5e9683506b1af2a6ce09b692c3c89818bfec7d2c56",
+    "shop-base-parent/pom.xml": "b401a9b0adedb9a58634b8c018916942274b513f2c59e89adc9756b3885589b6",
+    "shop-cache/pom.xml": "bbd4d6856af4fc57dc79a34064b10b7f4180b7099e0ea820d340c476d2209497",
+    "shop-cart/pom.xml": "929bb59f299b8e34d5e422a2d9500e7a9540d47f0a113e9c71aa4ff8e91e917e",
+    "shop-common/pom.xml": "07a6625aeab5592b10ccc74e48d02b0b9b729d599e59fd57df2b50e9330d49d9",
+    "shop-gateway/pom.xml": "ab487b9c8c90b76f32ced602948923786e390dce7538d8b51735c7f99f624520",
+    "shop-messaging/pom.xml": "627b7ef9fa437618eddf011fa65ed27a8eb1e04b929429944a7ea19da26e385f",
+    "shop-order/pom.xml": "4e424c9d35c845a52afcf1a464ae3eced43c121f5fd4ab32831954246ffbaeef",
+    "shop-pay/pom.xml": "aa94bdc8e5c926cf6637835b73112bdf866a41371928de474953450ea0195a3d",
+    "shop-product/pom.xml": "2cc7bf8079ce25140d2d7250a48423417d1be8c5ad9279e10afa9bd038a1fd97",
+    "shop-user/pom.xml": "221a0158e624e05d4d4a56a3a2213a5ddec4e4df3a34298db30e2fda00068106"
+  },
+  "extra_inputs": [
+    "shop-base-parent/pom.xml",
+    "shop-cache/pom.xml",
+    "shop-cart/pom.xml",
+    "shop-common/pom.xml",
+    "shop-gateway/pom.xml",
+    "shop-messaging/pom.xml",
+    "shop-order/pom.xml",
+    "shop-pay/pom.xml",
+    "shop-product/pom.xml",
+    "shop-user/pom.xml"
+  ]
+}

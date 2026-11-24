@@ -57,7 +57,7 @@ class GatewayRoutingTests {
         cases.put("/api/v1/products/123?view=detail", "shop-product");
         cases.put("/api/v1/categories", "shop-product");
         cases.put("/api/v1/admin/products/123", "shop-product");
-        cases.put("/api/v1/cart/items", "shop-cart");
+        cases.put("/api/v1/cart/items", "shop-order");
         cases.put("/api/v1/orders/123", "shop-order");
         cases.put("/api/v1/checkout/quotes", "shop-order");
         cases.put("/api/v1/admin/orders/123", "shop-order");

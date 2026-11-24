@@ -1,12 +1,106 @@
 {
-  "version": "dev-r1",
+  "version": "dev-r4",
   "rules": [
+    {
+      "id": "address-create",
+      "endpoint": {"methods": ["POST"], "paths": ["/api/v1/addresses"]},
+      "routeIds": ["shop-user-api"],
+      "permissions": ["address:write:own"],
+      "match": "ALL"
+    },
+    {
+      "id": "address-list",
+      "endpoint": {"methods": ["GET"], "paths": ["/api/v1/addresses"]},
+      "routeIds": ["shop-user-api"],
+      "permissions": ["address:write:own"],
+      "match": "ALL"
+    },
+    {
+      "id": "address-change",
+      "endpoint": {"methods": ["PUT", "DELETE"], "paths": ["/api/v1/addresses/{addressId}"]},
+      "routeIds": ["shop-user-api"],
+      "permissions": ["address:write:own"],
+      "match": "ALL"
+    },
+    {
+      "id": "cart-list",
+      "endpoint": {"methods": ["GET"], "paths": ["/api/v1/cart/items"]},
+      "routeIds": ["shop-cart-api"],
+      "permissions": ["cart:write:own"],
+      "match": "ALL"
+    },
+    {
+      "id": "cart-change",
+      "endpoint": {"methods": ["PUT", "DELETE"], "paths": ["/api/v1/cart/items/{skuId}"]},
+      "routeIds": ["shop-cart-api"],
+      "permissions": ["cart:write:own"],
+      "match": "ALL"
+    },
+    {
+      "id": "checkout-quote",
+      "endpoint": {"methods": ["POST"], "paths": ["/api/v1/checkout/quotes"]},
+      "routeIds": ["shop-order-api"],
+      "permissions": ["order:create"],
+      "match": "ALL"
+    },
     {
       "id": "create-order",
       "endpoint": {"methods": ["POST"], "paths": ["/api/v1/orders"]},
       "routeIds": [],
       "permissions": ["order:create"],
       "match": "ALL"
+    },
+    {
+      "id": "read-own-orders",
+      "endpoint": {"methods": ["GET"], "paths": ["/api/v1/orders", "/api/v1/orders/{orderNo}"]},
+      "routeIds": ["shop-order-api"],
+      "permissions": ["order:read:own"],
+      "match": "ALL"
+    },
+    {
+      "id": "payment-create",
+      "endpoint": {"methods": ["POST"], "paths": ["/api/v1/payment-sessions"]},
+      "routeIds": ["shop-pay-api"], "permissions": ["order:create"], "match": "ALL"
+    },
+    {
+      "id": "payment-read",
+      "endpoint": {"methods": ["GET"], "paths": ["/api/v1/payment-sessions/{paymentNo}"]},
+      "routeIds": ["shop-pay-api"], "permissions": ["order:read:own"], "match": "ALL"
+    },
+    {
+      "id": "payment-mock-create",
+      "endpoint": {"methods": ["POST"], "paths": ["/api/v1/test/payment-sessions/{paymentNo}/payment-events"]},
+      "routeIds": ["shop-pay-api"], "permissions": ["payment:mock:admin"], "match": "ALL"
+    },
+    {
+      "id": "payment-mock-read",
+      "endpoint": {"methods": ["GET"], "paths": ["/api/v1/test/payment-sessions/{paymentNo}/payment-events/{eventId}"]},
+      "routeIds": ["shop-pay-api"], "permissions": ["payment:mock:admin"], "match": "ALL"
+    },
+    {
+      "id": "order-cancel",
+      "endpoint": {"methods": ["POST"], "paths": ["/api/v1/orders/{orderNo}/cancellations"]},
+      "routeIds": ["shop-order-api"], "permissions": ["order:create"], "match": "ALL"
+    },
+    {
+      "id": "order-cancellation-read",
+      "endpoint": {"methods": ["GET"], "paths": ["/api/v1/orders/{orderNo}/cancellations/{cancellationNo}"]},
+      "routeIds": ["shop-order-api"], "permissions": ["order:read:own"], "match": "ALL"
+    },
+    {
+      "id": "order-receipt",
+      "endpoint": {"methods": ["PUT"], "paths": ["/api/v1/orders/{orderNo}/receipt"]},
+      "routeIds": ["shop-order-api"], "permissions": ["order:read:own"], "match": "ALL"
+    },
+    {
+      "id": "admin-orders-read",
+      "endpoint": {"methods": ["GET"], "paths": ["/api/v1/admin/orders", "/api/v1/admin/orders/{orderNo}"]},
+      "routeIds": ["shop-order-api"], "permissions": ["order:read:any"], "match": "ALL"
+    },
+    {
+      "id": "admin-order-ship",
+      "endpoint": {"methods": ["POST"], "paths": ["/api/v1/admin/orders/{orderNo}/shipments"]},
+      "routeIds": ["shop-order-api"], "permissions": ["order:ship"], "match": "ALL"
     },
     {
       "id": "admin-product-write",

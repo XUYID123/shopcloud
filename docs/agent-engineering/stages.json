@@ -1,0 +1,187 @@
+{
+  "workflow": "construction",
+  "version": "2.0.0",
+  "stages": [
+    {
+      "id": 1,
+      "goal": "审计当前项目",
+      "input": "POM、源码结构、初始审计",
+      "depends_on": null,
+      "execution": "核对模块、技术栈、组件与风险",
+      "artifacts": [
+        "pom.xml",
+        "docs/agent-engineering/stage-01-audit.md"
+      ],
+      "acceptance": "模块真实存在，历史版本标识清楚，未实现能力有边界",
+      "checks": [
+        "maven-reactor",
+        "local-links"
+      ],
+      "review": "docs/agent-engineering/stage-01-audit.md",
+      "failure": "保存失败证据。修复或确认外部条件后复验；同因连续三次失败时阻塞。",
+      "exit": "本阶段所有必要检查通过，保存证据并原子更新状态后才能推进。"
+    },
+    {
+      "id": 2,
+      "goal": "整合知识库",
+      "input": "阶段 1、现有 Docs 和 ADR",
+      "depends_on": 1,
+      "execution": "保留历史并维护当前组件、数据、Redis、消息及安全入口",
+      "artifacts": [
+        "docs/README.md",
+        "docs/architecture/README.md",
+        "docs/architecture/component-catalog.md",
+        "docs/database/README.md",
+        "docs/middleware/README.md",
+        "docs/messaging/README.md",
+        "docs/security/README.md",
+        "docs/business/README.md",
+        "docs/standards/README.md",
+        "docs/decisions/README.md",
+        "docs/agent-engineering/stage-02-knowledge-base.md"
+      ],
+      "acceptance": "权威来源易定位，引用有效，既有业务事实有依据",
+      "checks": [
+        "local-links"
+      ],
+      "review": "docs/agent-engineering/stage-02-knowledge-base.md",
+      "failure": "保存失败证据。修复或确认外部条件后复验；同因连续三次失败时阻塞。",
+      "exit": "本阶段所有必要检查通过，保存证据并原子更新状态后才能推进。"
+    },
+    {
+      "id": 3,
+      "goal": "建立根约束与任务入口",
+      "input": "阶段 2、现有 AGENTS、路由要求",
+      "depends_on": 2,
+      "execution": "保留工程规范，在业务流程之前加入意图、授权和路由入口",
+      "artifacts": [
+        "AGENTS.md",
+        "docs/agent-engineering/workflows/task-routing.md",
+        "docs/agent-engineering/stage-03-agents.md"
+      ],
+      "acceptance": "只读与写入边界清晰，任务进入单一主流程，链接有效",
+      "checks": [
+        "local-links"
+      ],
+      "review": "docs/agent-engineering/stage-03-agents.md",
+      "failure": "保存失败证据。修复或确认外部条件后复验；同因连续三次失败时阻塞。",
+      "exit": "本阶段所有必要检查通过，保存证据并原子更新状态后才能推进。"
+    },
+    {
+      "id": 4,
+      "goal": "校验专业 Skills",
+      "input": "阶段 3、七份技能、Codex 实际环境",
+      "depends_on": 3,
+      "execution": "保留目录、职责和触发描述，执行 App Server 发现与代表性演练",
+      "artifacts": [
+        "docs/agent-engineering/skills.md",
+        "docs/agent-engineering/stage-04-skills.md",
+        ".agents/skills/code-review/SKILL.md",
+        ".agents/skills/concurrency-design/SKILL.md",
+        ".agents/skills/database-design/SKILL.md",
+        ".agents/skills/feature-development/SKILL.md",
+        ".agents/skills/redis-design/SKILL.md",
+        ".agents/skills/rocketmq-design/SKILL.md",
+        ".agents/skills/security-review/SKILL.md"
+      ],
+      "acceptance": "七项 metadata 与发现通过，自动触发的未验证范围明确",
+      "checks": [
+        "local-links",
+        "skill-discovery"
+      ],
+      "review": "docs/agent-engineering/stage-04-skills.md",
+      "failure": "保存失败证据。修复或确认外部条件后复验；同因连续三次失败时阻塞。",
+      "exit": "本阶段所有必要检查通过，保存证据并原子更新状态后才能推进。"
+    },
+    {
+      "id": 5,
+      "goal": "核对自动化质量门禁",
+      "input": "阶段 4、Hook、CI、隔离运行证据",
+      "depends_on": 4,
+      "execution": "复用现有门禁，加入状态校验；核对保留运行证据与实际应用字节范围",
+      "artifacts": [
+        ".githooks/pre-commit",
+        ".github/workflows/quality.yml",
+        "infra/quality/gate.py",
+        "infra/quality/compose.yaml",
+        "docs/agent-engineering/quality-gate.md",
+        "docs/agent-engineering/stage-05-quality.md"
+      ],
+      "acceptance": "本地门禁实际成功，历史 Maven/OSV 范围准确，托管验证状态单列",
+      "checks": [
+        "local-links",
+        "local-gate",
+        "runtime-evidence"
+      ],
+      "review": "docs/agent-engineering/stage-05-quality.md",
+      "failure": "保存失败证据。修复或确认外部条件后复验；同因连续三次失败时阻塞。",
+      "exit": "本阶段所有必要检查通过，保存证据并原子更新状态后才能推进。"
+    },
+    {
+      "id": 6,
+      "goal": "打通六步开发协议",
+      "input": "阶段 5、主技能、业务任务记录约定",
+      "depends_on": 5,
+      "execution": "记录九项工程评估和确认边界，分离业务状态",
+      "artifacts": [
+        "docs/standards/development-lifecycle.md",
+        "docs/agent-engineering/tasks/README.md",
+        "docs/agent-engineering/stage-06-lifecycle.md"
+      ],
+      "acceptance": "既有业务流程可追溯，简单任务保持轻量，复杂任务有独立记录入口",
+      "checks": [
+        "local-links"
+      ],
+      "review": "docs/agent-engineering/stage-06-lifecycle.md",
+      "failure": "保存失败证据。修复或确认外部条件后复验；同因连续三次失败时阻塞。",
+      "exit": "本阶段所有必要检查通过，保存证据并原子更新状态后才能推进。"
+    },
+    {
+      "id": 7,
+      "goal": "执行场景验收",
+      "input": "阶段 6、已实现商品入口、消息组件、路由规则",
+      "depends_on": 6,
+      "execution": "演练新增商品、订单异步和路由边界，并核对原四场景报告",
+      "artifacts": [
+        "docs/agent-engineering/tasks/upgrade-rehearsal.md",
+        "docs/agent-engineering/evidence/router-cases.json",
+        "docs/agent-engineering/evidence/router-validation.md",
+        "docs/agent-engineering/stage-07-scenarios.md"
+      ],
+      "acceptance": "两份业务演练齐全，设计与真实测试证据边界明确，十二类路由均验证",
+      "checks": [
+        "local-links",
+        "business-rehearsals",
+        "recovery-tests"
+      ],
+      "review": "docs/agent-engineering/stage-07-scenarios.md",
+      "failure": "保存失败证据。修复或确认外部条件后复验；同因连续三次失败时阻塞。",
+      "exit": "本阶段所有必要检查通过，保存证据并原子更新状态后才能推进。"
+    },
+    {
+      "id": 8,
+      "goal": "验证维护与恢复",
+      "input": "阶段 7、状态协议、维护记录",
+      "depends_on": 7,
+      "execution": "演练失败修复、顺序推进、中断恢复、漂移和阻塞",
+      "artifacts": [
+        "docs/agent-engineering/maintenance.md",
+        "docs/agent-engineering/construction-workflow.md",
+        "docs/agent-engineering/stage-08-maintenance.md",
+        "infra/quality/workflow.py",
+        "infra/quality/workflow_checks.py",
+        "infra/quality/test_workflow.py",
+        "infra/quality/router_policy.py",
+        "infra/quality/test_router.py"
+      ],
+      "acceptance": "状态自动推进、须有真实证据，回归测试通过，维护规则已挂接",
+      "checks": [
+        "local-links",
+        "recovery-tests"
+      ],
+      "review": "docs/agent-engineering/stage-08-maintenance.md",
+      "failure": "保存失败证据。修复或确认外部条件后复验；同因连续三次失败时阻塞。",
+      "exit": "本阶段所有必要检查通过，保存证据并原子更新状态后才能推进。"
+    }
+  ]
+}

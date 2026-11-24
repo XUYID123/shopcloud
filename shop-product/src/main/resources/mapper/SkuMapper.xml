@@ -6,12 +6,51 @@
         FROM product_sku s JOIN product_spu p ON p.id = s.product_id
         WHERE s.id = #{skuId}
     </select>
-    <select id="selectVisibleById" resultType="org.spring.shopproduct.entity.SkuEntity">
-        SELECT s.id, s.product_id, s.sku_code, s.spec_name, s.weight_gram, s.price_fen, s.enabled, s.version
+    <sql id="visibleSkuTables">
         FROM product_sku s
         JOIN product_spu p ON p.id = s.product_id
         JOIN category c ON c.id = p.category_id
-        WHERE s.id = #{skuId} AND s.enabled = 1 AND p.status = 'ON_SALE' AND c.enabled = 1
+        WHERE s.enabled = 1 AND p.status = 'ON_SALE' AND c.enabled = 1
+    </sql>
+    <select id="selectVisibleById" resultType="org.spring.shopproduct.entity.SkuEntity">
+        SELECT s.id, s.product_id, s.sku_code, s.spec_name, s.weight_gram, s.price_fen, s.enabled, s.version
+        <include refid="visibleSkuTables"/>
+        AND s.id = #{skuId}
+    </select>
+    <resultMap id="cartMetadata" type="org.spring.shopproduct.vo.CartSkuVO">
+        <constructor>
+            <idArg column="id" javaType="string"/>
+            <arg column="product_name" javaType="string"/>
+            <arg column="spec_name" javaType="string"/>
+            <arg column="price_fen" javaType="_long"/>
+            <arg column="weight_gram" javaType="_int"/>
+        </constructor>
+    </resultMap>
+    <select id="selectCartMetadata" resultMap="cartMetadata">
+        SELECT s.id, p.name AS product_name, s.spec_name, s.price_fen, s.weight_gram
+        <include refid="visibleSkuTables"/>
+        AND s.id IN
+        <foreach collection="skuIds" item="skuId" open="(" separator="," close=")">#{skuId}</foreach>
+    </select>
+    <resultMap id="quoteLine" type="org.spring.shopcommon.checkout.ProductQuote$Line">
+        <constructor>
+            <idArg column="id" javaType="string"/>
+            <arg column="product_id" javaType="string"/>
+            <arg column="product_name" javaType="string"/>
+            <arg column="spec_name" javaType="string"/>
+            <arg column="weight_gram" javaType="long"/>
+            <arg column="price_fen" javaType="long"/>
+            <arg column="product_version" javaType="long"/>
+            <arg column="sku_version" javaType="long"/>
+        </constructor>
+    </resultMap>
+    <select id="selectQuoteLines" resultMap="quoteLine">
+        SELECT s.id, s.product_id, p.name AS product_name, s.spec_name, s.weight_gram, s.price_fen,
+               p.version AS product_version, s.version AS sku_version
+        <include refid="visibleSkuTables"/>
+        AND s.id IN
+        <foreach collection="skuIds" item="skuId" open="(" separator="," close=")">#{skuId}</foreach>
+        ORDER BY s.id
     </select>
     <!-- 利用 product_id/enabled 索引过滤，不复用管理端持锁且包含禁用规格的查询。 -->
     <select id="selectEnabledByProduct" resultType="org.spring.shopproduct.entity.SkuEntity">

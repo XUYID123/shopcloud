@@ -1,0 +1,96 @@
+{
+  "workflow_version": "2.0.0",
+  "stage": 5,
+  "result": "PASS",
+  "recorded_at": "2026-11-20T09:12:50+00:00",
+  "checks": [
+    {
+      "id": "artifacts",
+      "status": "PASS",
+      "summary": "Nonempty repository artifacts hashed",
+      "source": "TOOL",
+      "required": true,
+      "files": [
+        ".githooks/pre-commit",
+        ".github/workflows/quality.yml",
+        "infra/quality/gate.py",
+        "infra/quality/compose.yaml",
+        "docs/agent-engineering/quality-gate.md",
+        "docs/agent-engineering/stage-05-quality.md"
+      ]
+    },
+    {
+      "id": "local-links",
+      "status": "PASS",
+      "summary": "Checked local references in 2 Markdown artifacts",
+      "source": "TOOL",
+      "required": true,
+      "files": [
+        "docs/agent-engineering/quality-gate.md",
+        "docs/agent-engineering/stage-05-quality.md"
+      ]
+    },
+    {
+      "id": "local-gate",
+      "status": "PASS",
+      "summary": "Executed local verifier",
+      "source": "TOOL",
+      "required": true,
+      "command": [
+        "python",
+        "-X",
+        "utf8",
+        "infra/quality/gate.py",
+        "lint"
+      ],
+      "exit_code": 0,
+      "log": "target/harness-workflow/local-gate-6705036587ea434d8e10ebcec9952fa6.log",
+      "files": [
+        "infra/quality/gate.py",
+        ".github/workflows/quality.yml"
+      ],
+      "inputs": [
+        "infra/quality/gate.py",
+        ".github/workflows/quality.yml"
+      ]
+    },
+    {
+      "id": "runtime-evidence",
+      "status": "PASS",
+      "summary": "Verified scope of retained local Maven and OSV results",
+      "source": "TOOL",
+      "required": true,
+      "files": [
+        "docs/agent-engineering/evidence/runtime-baseline.json"
+      ],
+      "inputs": [
+        "docs/agent-engineering/evidence/runtime-baseline.json"
+      ]
+    },
+    {
+      "id": "agent-review",
+      "status": "PASS",
+      "summary": "本地门禁实际成功，历史 Maven/OSV 范围准确，托管验证状态单列",
+      "source": "AGENT",
+      "required": true,
+      "files": [
+        "docs/agent-engineering/stage-05-quality.md"
+      ]
+    }
+  ],
+  "snapshots": {
+    "@stage-contract": "cd964d983aeed3fe8ba39bda360278566be464640253293099177cd07cba045f",
+    ".githooks/pre-commit": "d2f42c601ca1a12f2191481060ebdaa8ef838c821f66cfa3cfde575186564931",
+    ".github/workflows/quality.yml": "0512be81f10a7a846d70ea9ff1b537e95ef24070db0fca7bc88db290534dece6",
+    "docs/agent-engineering/evidence/runtime-baseline.json": "ded9764adbc1eae3c3879515c6980b3fb39d74704bf3907b6a91b91827f93769",
+    "docs/agent-engineering/quality-gate.md": "dd9aa4e41ca05f06ea5d60a7ba2036102a5e50ddffcc34684155225068ee262a",
+    "docs/agent-engineering/stage-05-quality.md": "36f82d28a59fdf435031726b1103268c3f0f43063768f48b80e125ed58a2fa4b",
+    "infra/quality/compose.yaml": "6bddf0ef3e4cab2e7e00b05ab5e7b592fd1a46828a1514fc4669a252239ae4d6",
+    "infra/quality/gate.py": "2724eaaafb1d40c3c0440ab630d5175cf8731f059b4873d81830d496edf3d790"
+  },
+  "extra_inputs": [
+    ".github/workflows/quality.yml",
+    "docs/agent-engineering/evidence/runtime-baseline.json",
+    "infra/quality/gate.py"
+  ]
+}

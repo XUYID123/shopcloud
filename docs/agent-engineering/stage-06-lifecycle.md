@@ -7,3 +7,7 @@
 输入为「新增后台商品 SPU」。需求分析定位 [已有 API](../26-新增商品SPU接口.md)，复查响应、分类、状态和历史客户端，识别 POST 已交付。技术设计复用 DTO、Result、BusinessException 和事务分类校验，使用 MySQL 外键及锁；未上架创建无需新缓存或异步事件。方案审核核对后台授权、分类竞态、初始状态和已有上下架边界。实现步骤得出无需新增 API 的结论。验证步骤定位 [ProductIntegrationTests](../../shop-product/src/test/java/org/spring/shopproduct/ProductIntegrationTests.java)，并回看阶段 5 全量通过的用例；交付记录包含已有入口、复用机制、中间件结论和无需实现的原因。
 
 验收回查六个步骤、主技能、全局规则、DoD、专项职责和引用。上述演练具备从需求到证据的完整路径，当前项目文件记录各步骤结果。
+
+## Harness 2.0 复核
+
+- [stage-06]: ACCEPTED · 2026-11-20 · 六步协议已补齐全部评估标记，并与任务级状态、路由及工作流 A 分离。

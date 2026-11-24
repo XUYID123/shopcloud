@@ -1,0 +1,65 @@
+{
+  "origin": "ARCHIVED",
+  "observed_on": "2026-11-19",
+  "original_source_digest": "96f71fc3777f328e07608c238d01c04a810688e50afcf68f3bae58b61a01391f 265",
+  "source_fingerprint": {
+    "sha256": "4a767c776ab612a4ebe6c704bb903464fcdc8b782438592e9448cbdcce75ff60",
+    "file_count": 265
+  },
+  "checks": [
+    {
+      "id": "quick",
+      "source": "TOOL",
+      "status": "PASS",
+      "command": [
+        "python",
+        "-X",
+        "utf8",
+        "infra/quality/gate.py",
+        "quick"
+      ],
+      "exit_code": 0,
+      "summary": "Fresh Surefire results: 134 tests, 0 failures, 0 errors, 0 skipped",
+      "log": "target/harness-boot4-quick-final.log",
+      "files": [
+        "docs/agent-engineering/stage-05-quality.md"
+      ]
+    },
+    {
+      "id": "full",
+      "source": "TOOL",
+      "status": "PASS",
+      "command": [
+        "python",
+        "-X",
+        "utf8",
+        "infra/quality/gate.py",
+        "full"
+      ],
+      "exit_code": 0,
+      "summary": "Fresh Surefire results: 274 tests, 0 failures, 0 errors, 0 skipped",
+      "log": "target/harness-boot4-full-final.log",
+      "files": [
+        "docs/agent-engineering/stage-05-quality.md"
+      ]
+    },
+    {
+      "id": "dependency-scan",
+      "source": "TOOL",
+      "status": "PASS",
+      "command": [
+        "python",
+        "-X",
+        "utf8",
+        "infra/quality/gate.py",
+        "dependency-scan"
+      ],
+      "exit_code": 0,
+      "summary": "No issues found",
+      "log": "target/harness-osv-sbom-final.log",
+      "files": [
+        "docs/agent-engineering/stage-05-quality.md"
+      ]
+    }
+  ]
+}

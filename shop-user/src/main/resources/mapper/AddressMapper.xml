@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.spring.shopuser.mapper.AddressMapper">
+    <resultMap id="addressView" type="org.spring.shopuser.vo.AddressVO">
+        <constructor>
+            <idArg column="id" javaType="string"/>
+            <arg column="receiver" javaType="string"/>
+            <arg column="phone" javaType="string"/>
+            <arg column="region_code" javaType="string"/>
+            <arg column="detail" javaType="string"/>
+            <arg column="is_default" javaType="_boolean"/>
+        </constructor>
+    </resultMap>
+    <select id="findOwnerStatus" resultType="string">
+        SELECT status FROM user_account WHERE id = #{userId}
+    </select>
+    <select id="lockOwnerStatus" resultType="string">
+        SELECT status FROM user_account WHERE id = #{userId} FOR UPDATE
+    </select>
+    <select id="countByOwner" resultType="int">
+        SELECT COUNT(*) FROM user_address WHERE user_id = #{userId}
+    </select>
+    <select id="listByOwner" resultMap="addressView">
+        SELECT id, receiver, phone, region_code, detail, is_default
+        FROM user_address WHERE user_id = #{userId}
+        ORDER BY is_default DESC, id DESC LIMIT #{limit}
+    </select>
+    <select id="findByEnabledOwner" resultMap="addressView">
+        SELECT a.id, a.receiver, a.phone, a.region_code, a.detail, a.is_default
+        FROM user_address a
+        JOIN user_account u ON u.id = a.user_id
+        WHERE a.id = #{addressId} AND a.user_id = #{userId} AND u.status = 'ENABLED'
+    </select>
+    <select id="lockOwnedAddress" resultType="long">
+        SELECT id FROM user_address WHERE user_id = #{userId} AND id = #{addressId} FOR UPDATE
+    </select>
+    <update id="clearDefault">
+        UPDATE user_address SET is_default = FALSE WHERE default_user_id = #{userId}
+        <if test="keepId != null">AND id != #{keepId}</if>
+    </update>
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id" keyColumn="id">
+        INSERT INTO user_address (user_id, receiver, phone, region_code, detail, is_default)
+        VALUES (#{userId}, #{receiver}, #{phone}, #{regionCode}, #{detail}, #{defaultAddress})
+    </insert>
+    <update id="replace">
+        UPDATE user_address
+        SET receiver = #{address.receiver}, phone = #{address.phone}, region_code = #{address.regionCode},
+            detail = #{address.detail}, is_default = #{address.defaultAddress}
+        WHERE user_id = #{address.userId} AND id = #{addressId}
+    </update>
+    <delete id="deleteByOwner">
+        DELETE FROM user_address WHERE user_id = #{userId} AND id = #{addressId}
+    </delete>
+</mapper>

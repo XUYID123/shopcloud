@@ -1,0 +1,22 @@
+# Scrape the outputs of trade_health.py --prometheus with the platform's textfile collector.
+groups:
+  - name: shop-trade
+    rules:
+      - alert: ShopTradeReconciliationFailed
+        expr: shop_trade_alerts > 0
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Trade reconciliation detected an issue in {{ $labels.service }}"
+      - alert: ShopTradeReconciliationMissing
+        expr: |
+          absent(shop_trade_alerts{service="order"})
+          or absent(shop_trade_alerts{service="inventory"})
+          or absent(shop_trade_alerts{service="pay"})
+          or time() - shop_trade_collected_timestamp_seconds > 300
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Trade reconciliation is missing for {{ $labels.service }}"

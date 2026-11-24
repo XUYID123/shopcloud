@@ -41,8 +41,9 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler imple
         // 可预期拒绝由访问日志和可选业务日志输出业务码；只有系统故障在这里打印一次堆栈。
         if(e.getCode()>=500) log.error("event=DEPENDENCY_FAILURE code={}",e.getBusinessCode(),e);
         // 使用异常自带的 code（比如 400），或者直接返回 400
-        return ResponseEntity.status(e.getCode())
-                .body(Result.fail(e.getBusinessCode(), e.getMessage()));
+        var response = ResponseEntity.status(e.getCode());
+        if (ErrorCode.RATE_LIMITED.name().equals(e.getBusinessCode())) response.header(HttpHeaders.RETRY_AFTER, "1");
+        return response.body(Result.fail(e.getBusinessCode(), e.getMessage()));
     }
 
     /** 未知错误在服务日志中保留诊断信息，对外返回统一 500，不直接回传异常消息。 */

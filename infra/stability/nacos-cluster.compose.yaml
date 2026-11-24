@@ -1,0 +1,64 @@
+# Isolated Nacos exercise. Loopback client ports always keep the +1000 gRPC offset.
+x-nacos: &nacos
+  image: nacos/nacos-server:v3.2.4
+  depends_on:
+    nacos-db:
+      condition: service_healthy
+  environment:
+    MODE: cluster
+    PREFER_HOST_MODE: hostname
+    NACOS_SERVERS: "nacos-1:8848 nacos-2:8848 nacos-3:8848"
+    SPRING_DATASOURCE_PLATFORM: mysql
+    MYSQL_SERVICE_HOST: nacos-db
+    MYSQL_SERVICE_DB_NAME: nacos_config
+    MYSQL_SERVICE_USER: nacos
+    MYSQL_SERVICE_PASSWORD: ${STABILITY_NACOS_DB_PASSWORD:?set a temporary password}
+    NACOS_AUTH_ENABLE: "true"
+    NACOS_AUTH_ADMIN_ENABLE: "true"
+    NACOS_AUTH_CONSOLE_ENABLE: "true"
+    NACOS_AUTH_TOKEN: ${STABILITY_NACOS_AUTH_TOKEN:?set a temporary Base64 key}
+    NACOS_AUTH_IDENTITY_KEY: stabilityNode
+    NACOS_AUTH_IDENTITY_VALUE: ${STABILITY_NACOS_IDENTITY:?set a random node identity}
+    JVM_XMS: 192m
+    JVM_XMX: 384m
+    JVM_XMN: 96m
+
+services:
+  nacos-schema:
+    image: nacos/nacos-server:v3.2.4
+    entrypoint: ["sh", "-ec", "cp /home/nacos/conf/mysql-schema.sql /schema/001-nacos.sql && chmod 644 /schema/001-nacos.sql"]
+    volumes:
+      - nacos-init:/schema
+  nacos-db:
+    image: mysql:8.4.11
+    depends_on:
+      nacos-schema:
+        condition: service_completed_successfully
+    environment:
+      MYSQL_DATABASE: nacos_config
+      MYSQL_USER: nacos
+      MYSQL_PASSWORD: ${STABILITY_NACOS_DB_PASSWORD:?set a temporary password}
+      MYSQL_ROOT_PASSWORD: ${STABILITY_NACOS_DB_ROOT_PASSWORD:?set a temporary root password}
+    volumes:
+      - nacos-init:/docker-entrypoint-initdb.d:ro
+      - nacos-db:/var/lib/mysql
+    healthcheck:
+      test: ["CMD-SHELL", "MYSQL_PWD=$$MYSQL_PASSWORD mysql -h127.0.0.1 -u$$MYSQL_USER nacos_config -e 'SELECT 1 FROM config_info LIMIT 1'"]
+      interval: 2s
+      timeout: 3s
+      retries: 40
+  nacos-1:
+    <<: *nacos
+    hostname: nacos-1
+    ports: ["127.0.0.1:${STABILITY_NACOS_API_1:-18848}:8848", "127.0.0.1:${STABILITY_NACOS_GRPC_1:-19848}:9848"]
+  nacos-2:
+    <<: *nacos
+    hostname: nacos-2
+    ports: ["127.0.0.1:${STABILITY_NACOS_API_2:-28848}:8848", "127.0.0.1:${STABILITY_NACOS_GRPC_2:-29848}:9848"]
+  nacos-3:
+    <<: *nacos
+    hostname: nacos-3
+    ports: ["127.0.0.1:${STABILITY_NACOS_API_3:-38848}:8848", "127.0.0.1:${STABILITY_NACOS_GRPC_3:-39848}:9848"]
+volumes:
+  nacos-init:
+  nacos-db:

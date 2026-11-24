@@ -30,6 +30,8 @@ jobs:
             args=(--base "$BASE")
           fi
           python3 -X utf8 infra/quality/gate.py quick "${args[@]}"
+      - name: Construction recovery and task route regressions
+        run: python3 -X utf8 -m unittest discover -s infra/quality -v
   integration:
     needs: quick
     runs-on: ubuntu-latest

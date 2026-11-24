@@ -29,12 +29,12 @@ class GatewayErrorHandlingTests {
     private final HttpClient client = HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(3)).build();
     @DynamicPropertySource static void discovery(DynamicPropertyRegistry registry) {
         registry.add("spring.cloud.discovery.client.simple.instances.shop-product[0].uri", () -> "http://127.0.0.1:" + BACKEND.getAddress().getPort());
-        registry.add("spring.cloud.discovery.client.simple.instances.shop-cart[0].uri", () -> "http://127.0.0.1:" + CLOSED_PORT);
+        registry.add("spring.cloud.discovery.client.simple.instances.shop-order[0].uri", () -> "http://127.0.0.1:" + CLOSED_PORT);
     }
     @AfterAll static void close() { BACKEND.stop(0); }
 
     @Test void missingDiscoveryInstanceAndRefusedConnectionAreStandard503() throws Exception {
-        assertError(get("/api/v1/orders/1", null), 503, "SERVICE_UNAVAILABLE");
+        assertError(get("/api/v1/payment-sessions/1", null), 503, "SERVICE_UNAVAILABLE");
         assertError(get("/api/v1/cart/items", null), 503, "SERVICE_UNAVAILABLE");
     }
     @Test void missingRouteIsStandard404ButCompletedDownstreamBusinessErrorIsPreserved() throws Exception {

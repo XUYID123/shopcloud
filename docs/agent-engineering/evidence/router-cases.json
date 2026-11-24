@@ -1,0 +1,389 @@
+[
+  {
+    "prompt": "解释 Spring 事务。",
+    "interpreted": {
+      "intent": "knowledge",
+      "complexity": "SIMPLE",
+      "risk": "LOW"
+    },
+    "expected": {
+      "route": "ROUTE-01",
+      "mode": "READ",
+      "complexity": "SIMPLE",
+      "risk": "LOW",
+      "enhanced_verification": false,
+      "confirmation_required": false,
+      "construction": false
+    },
+    "skills": "无",
+    "reason": "通用原理与边界示例"
+  },
+  {
+    "prompt": "解释项目中 JwtFilter。",
+    "interpreted": {
+      "intent": "explain-code",
+      "complexity": "SIMPLE",
+      "risk": "LOW"
+    },
+    "expected": {
+      "route": "ROUTE-02",
+      "mode": "READ",
+      "complexity": "SIMPLE",
+      "risk": "LOW",
+      "enhanced_verification": false,
+      "confirmation_required": false,
+      "construction": false
+    },
+    "skills": "按需 security-review",
+    "reason": "定位实际 Gateway JWT 与下游验签类，解释调用链"
+  },
+  {
+    "prompt": "定位 Redis 连接异常。",
+    "interpreted": {
+      "intent": "diagnose",
+      "complexity": "STANDARD",
+      "risk": "LOW"
+    },
+    "expected": {
+      "route": "ROUTE-03",
+      "mode": "READ",
+      "complexity": "STANDARD",
+      "risk": "LOW",
+      "enhanced_verification": false,
+      "confirmation_required": false,
+      "construction": false
+    },
+    "skills": "redis-design",
+    "reason": "核对两个 Redis 实例及失败日志，区分已确认原因和假设"
+  },
+  {
+    "prompt": "修复订单重复创建 Bug。",
+    "interpreted": {
+      "intent": "fix",
+      "complexity": "COMPLEX",
+      "risk": "HIGH"
+    },
+    "expected": {
+      "route": "ROUTE-04",
+      "mode": "BUSINESS_WRITE",
+      "complexity": "COMPLEX",
+      "risk": "HIGH",
+      "enhanced_verification": true,
+      "confirmation_required": false,
+      "construction": false
+    },
+    "skills": "database-design、concurrency-design、code-review",
+    "reason": "先确认是否已有入口，再复现重复与同事务幂等"
+  },
+  {
+    "prompt": "新增商品接口。",
+    "interpreted": {
+      "intent": "feature",
+      "complexity": "STANDARD",
+      "risk": "MEDIUM"
+    },
+    "expected": {
+      "route": "ROUTE-05",
+      "mode": "BUSINESS_WRITE",
+      "complexity": "STANDARD",
+      "risk": "MEDIUM",
+      "enhanced_verification": false,
+      "confirmation_required": false,
+      "construction": false
+    },
+    "skills": "feature-development、database-design、security-review、code-review",
+    "reason": "先定位已有 POST，确认增量再动代码"
+  },
+  {
+    "prompt": "优化商品查询 SQL。",
+    "interpreted": {
+      "intent": "optimize",
+      "complexity": "STANDARD",
+      "risk": "MEDIUM"
+    },
+    "expected": {
+      "route": "ROUTE-06",
+      "mode": "BUSINESS_WRITE",
+      "complexity": "STANDARD",
+      "risk": "MEDIUM",
+      "enhanced_verification": false,
+      "confirmation_required": false,
+      "construction": false
+    },
+    "skills": "database-design、code-review",
+    "reason": "基线和 EXPLAIN 前后对比并回归"
+  },
+  {
+    "prompt": "重构订单 Service。",
+    "interpreted": {
+      "intent": "refactor",
+      "complexity": "STANDARD",
+      "risk": "MEDIUM"
+    },
+    "expected": {
+      "route": "ROUTE-07",
+      "mode": "BUSINESS_WRITE",
+      "complexity": "STANDARD",
+      "risk": "MEDIUM",
+      "enhanced_verification": false,
+      "confirmation_required": false,
+      "construction": false
+    },
+    "skills": "code-review，按实际边界加专项",
+    "reason": "核对现有订单骨架和实际入口，保留外部契约"
+  },
+  {
+    "prompt": "设计 RocketMQ 异步订单方案。",
+    "interpreted": {
+      "intent": "design",
+      "complexity": "COMPLEX",
+      "risk": "HIGH"
+    },
+    "expected": {
+      "route": "ROUTE-08",
+      "mode": "READ",
+      "complexity": "COMPLEX",
+      "risk": "HIGH",
+      "enhanced_verification": true,
+      "confirmation_required": false,
+      "construction": false
+    },
+    "skills": "rocketmq-design、database-design、concurrency-design",
+    "reason": "提交设计和候选 ADR，包含 Outbox、DLQ 与重试"
+  },
+  {
+    "prompt": "审查 RocketMQ Consumer。",
+    "interpreted": {
+      "intent": "review",
+      "complexity": "STANDARD",
+      "risk": "HIGH"
+    },
+    "expected": {
+      "route": "ROUTE-09",
+      "mode": "READ",
+      "complexity": "STANDARD",
+      "risk": "HIGH",
+      "enhanced_verification": true,
+      "confirmation_required": false,
+      "construction": false
+    },
+    "skills": "code-review、rocketmq-design、security-review",
+    "reason": "输出文件位置、严重度及可验证依据"
+  },
+  {
+    "prompt": "执行库存扣减测试。",
+    "interpreted": {
+      "intent": "test",
+      "complexity": "STANDARD",
+      "risk": "HIGH"
+    },
+    "expected": {
+      "route": "ROUTE-10",
+      "mode": "ISOLATED_TEST",
+      "complexity": "STANDARD",
+      "risk": "HIGH",
+      "enhanced_verification": true,
+      "confirmation_required": false,
+      "construction": false
+    },
+    "skills": "concurrency-design",
+    "reason": "先核对库存接口与用例是否存在，缺失记录 NOT_RUN"
+  },
+  {
+    "prompt": "更新 API 文档。",
+    "interpreted": {
+      "intent": "documentation",
+      "complexity": "STANDARD",
+      "risk": "LOW"
+    },
+    "expected": {
+      "route": "ROUTE-11",
+      "mode": "PROJECT_DOCS",
+      "complexity": "STANDARD",
+      "risk": "LOW",
+      "enhanced_verification": false,
+      "confirmation_required": false,
+      "construction": false
+    },
+    "skills": "按需领域技能",
+    "reason": "对照 Controller 和 OpenAPI 更新受影响契约"
+  },
+  {
+    "prompt": "升级 AGENTS.md。",
+    "interpreted": {
+      "intent": "harness",
+      "complexity": "SIMPLE",
+      "risk": "LOW"
+    },
+    "expected": {
+      "route": "ROUTE-12",
+      "mode": "HARNESS",
+      "complexity": "SIMPLE",
+      "risk": "LOW",
+      "enhanced_verification": false,
+      "confirmation_required": false,
+      "construction": false
+    },
+    "skills": "按实际范围，涉及技能内容使用 skill-creator",
+    "reason": "小范围维护，既有八阶段状态独立"
+  },
+  {
+    "prompt": "评估是否应该引入 RocketMQ。",
+    "interpreted": {
+      "intent": "design",
+      "complexity": "STANDARD",
+      "risk": "LOW"
+    },
+    "expected": {
+      "route": "ROUTE-08",
+      "mode": "READ",
+      "complexity": "STANDARD",
+      "risk": "LOW",
+      "enhanced_verification": false,
+      "confirmation_required": false,
+      "construction": false
+    },
+    "skills": "rocketmq-design",
+    "reason": "比较同步、DB 任务与 MQ，无安装授权"
+  },
+  {
+    "prompt": "分析订单重复原因，只读。",
+    "interpreted": {
+      "intent": "fix",
+      "complexity": "STANDARD",
+      "risk": "LOW",
+      "boundary": "READ_ONLY"
+    },
+    "expected": {
+      "route": "ROUTE-03",
+      "mode": "READ",
+      "complexity": "STANDARD",
+      "risk": "LOW",
+      "enhanced_verification": false,
+      "confirmation_required": false,
+      "construction": false
+    },
+    "skills": "concurrency-design",
+    "reason": "限制为诊断"
+  },
+  {
+    "prompt": "先设计商品新增，只输出方案。",
+    "interpreted": {
+      "intent": "feature",
+      "complexity": "STANDARD",
+      "risk": "LOW",
+      "boundary": "DESIGN_ONLY"
+    },
+    "expected": {
+      "route": "ROUTE-08",
+      "mode": "READ",
+      "complexity": "STANDARD",
+      "risk": "LOW",
+      "enhanced_verification": false,
+      "confirmation_required": false,
+      "construction": false
+    },
+    "skills": "database-design",
+    "reason": "阶段边界阻止实施"
+  },
+  {
+    "prompt": "部署至生产并清空真实 MQ。",
+    "interpreted": {
+      "intent": "harness",
+      "complexity": "COMPLEX",
+      "risk": "CRITICAL",
+      "construction_requested": true
+    },
+    "expected": {
+      "route": "ROUTE-12",
+      "mode": "READ",
+      "complexity": "COMPLEX",
+      "risk": "CRITICAL",
+      "enhanced_verification": true,
+      "confirmation_required": true,
+      "construction": false
+    },
+    "skills": "rocketmq-design",
+    "reason": "生产与破坏性操作等待确认"
+  },
+  {
+    "prompt": "全量升级 Harness 的恢复和验收机制。",
+    "interpreted": {
+      "intent": "harness",
+      "complexity": "COMPLEX",
+      "risk": "MEDIUM",
+      "construction_requested": true
+    },
+    "expected": {
+      "route": "ROUTE-12",
+      "mode": "HARNESS",
+      "complexity": "COMPLEX",
+      "risk": "MEDIUM",
+      "enhanced_verification": false,
+      "confirmation_required": false,
+      "construction": true
+    },
+    "skills": "skill-creator",
+    "reason": "进入建设 A"
+  },
+  {
+    "prompt": "修复库存逻辑，扣减时点待定。",
+    "interpreted": {
+      "intent": "fix",
+      "complexity": "COMPLEX",
+      "risk": "HIGH",
+      "unresolved_decision": true
+    },
+    "expected": {
+      "route": "ROUTE-04",
+      "mode": "READ",
+      "complexity": "COMPLEX",
+      "risk": "HIGH",
+      "enhanced_verification": true,
+      "confirmation_required": true,
+      "construction": false
+    },
+    "skills": "database-design、concurrency-design",
+    "reason": "关键规则先确认"
+  },
+  {
+    "prompt": "只运行商品测试。",
+    "interpreted": {
+      "intent": "feature",
+      "complexity": "SIMPLE",
+      "risk": "LOW",
+      "boundary": "TEST_ONLY"
+    },
+    "expected": {
+      "route": "ROUTE-10",
+      "mode": "ISOLATED_TEST",
+      "complexity": "SIMPLE",
+      "risk": "LOW",
+      "enhanced_verification": false,
+      "confirmation_required": false,
+      "construction": false
+    },
+    "skills": "无",
+    "reason": "测试授权不扩大为代码修改"
+  },
+  {
+    "prompt": "只审查 Redis 一致性。",
+    "interpreted": {
+      "intent": "fix",
+      "complexity": "STANDARD",
+      "risk": "LOW",
+      "boundary": "REVIEW_ONLY"
+    },
+    "expected": {
+      "route": "ROUTE-09",
+      "mode": "READ",
+      "complexity": "STANDARD",
+      "risk": "LOW",
+      "enhanced_verification": false,
+      "confirmation_required": false,
+      "construction": false
+    },
+    "skills": "code-review、redis-design",
+    "reason": "审查授权不扩大为修复"
+  }
+]
